@@ -10,13 +10,30 @@
   "description": "Keeps the energy of in-person creativity alive for remote teams. Users draw, type, and chat on one shared canvas with no onboarding hassle.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "npm run dev:client",
+    "dev:client": "npm run dev --workspace=@collabboard/client",
+    "build": "npm run build:client",
+    "build:client": "npm run build --workspace=@collabboard/client",
+    "preview": "npm run preview:client",
+    "preview:client": "npm run preview --workspace=@collabboard/client",
+    "lint": "eslint .",
+    "format": "prettier -w .",
+    "typecheck": "tsc -b client"
   },
   "keywords": [],
-  "author": "",
+  "author": "Paul Nafureanu",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "devDependencies": {
-    "typescript": "^5.9.3"
+    "@eslint/js": "^9.37.0",
+    "@types/node": "^24.7.0",
+    "concurrently": "^9.2.1",
+    "eslint": "^9.37.0",
+    "eslint-plugin-react-hooks": "^6.1.1",
+    "eslint-plugin-react-refresh": "^0.4.23",
+    "globals": "^16.4.0",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.0"
   }
 }
