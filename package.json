@@ -10,15 +10,17 @@
   "description": "Keeps the energy of in-person creativity alive for remote teams. Users draw, type, and chat on one shared canvas with no onboarding hassle.",
   "main": "index.js",
   "scripts": {
-    "dev": "npm run dev:client",
+    "dev": "concurrently -n client,server -c auto \"npm:dev --workspace=@collabboard/client\" \"npm:dev --workspace=@collabboard/server\"",
     "dev:client": "npm run dev --workspace=@collabboard/client",
-    "build": "npm run build:client",
+    "dev:server": "npm run dev --workspace=@collabboard/server",
+    "build": "npm run build:client && npm run build:server",
     "build:client": "npm run build --workspace=@collabboard/client",
-    "preview": "npm run preview:client",
-    "preview:client": "npm run preview --workspace=@collabboard/client",
+    "build:server": "npm run build --workspace=@collabboard/server",
+    "preview": "npm run preview --workspace=@collabboard/client",
+    "start": "npm run start --workspace=@collabboard/server",
     "lint": "eslint .",
     "format": "prettier -w .",
-    "typecheck": "tsc -b client"
+    "typecheck": "tsc -b client server"
   },
   "keywords": [],
   "author": "Paul Nafureanu",
