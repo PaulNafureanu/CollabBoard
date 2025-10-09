@@ -6,10 +6,10 @@ import { main } from "./routes/main";
 import { health } from "./routes/health";
 import { version } from "./routes/version";
 
-import { user } from "./routes/user";
-import { room } from "./routes/room";
-import { membership } from "./routes/membership";
-import { message } from "./routes/message";
+import { users } from "./routes/users";
+import { rooms } from "./routes/rooms";
+import { memberships } from "./routes/memberships";
+import { messages } from "./routes/messages";
 import { board } from "./routes/board";
 
 const app = express();
@@ -23,11 +23,11 @@ app.use(express.json());
 app.use(main);
 app.use(health);
 app.use(version);
-app.use("/user", user);
-app.use("/room", room);
-app.use("/membership", membership);
-app.use("/message", message);
-app.use("/board", board);
+app.use("/users", users);
+app.use("/rooms", rooms);
+app.use("/memberships", memberships);
+app.use("/messages", messages);
+app.use("/boards", board);
 
 // 404
 app.use((req, res) => res.status(404).json({ ok: false, error: "Not found" }));

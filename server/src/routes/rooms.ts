@@ -1,16 +1,16 @@
 import { Router } from "express";
 import { prisma } from "../db/prisma";
 
-export const room = Router();
+export const rooms = Router();
 
-room.get("/:id", (req, res) => {
+rooms.get("/:id", (req, res) => {
   const roomId = Number(req.params.id);
   const room = prisma.room.findFirstOrThrow({ where: { id: roomId } });
   res.json(room);
 });
 
-room.post("/", (req, res) => {});
+rooms.post("/", (req, res) => {});
 
-room.delete("/:id", (req, res) => {});
+rooms.delete("/:id", (req, res) => {});
 
-room.put("/:id", (req, res) => {});
+rooms.put("/:id", (req, res) => {});
