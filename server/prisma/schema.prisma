@@ -1,0 +1,102 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+enum Role {
+  /// The unique creator of the room. Full privileges: can edit board, manage members,
+  /// delete messages, and close the room. Exactly one per room (enforced in app logic).
+  OWNER
+
+  /// Elevated editor(s) who can moderate: add/suspend/upgrade/downgrade/remove
+  /// members & messages, but cannot delete the room or change OWNER / PEER's roles.
+  MODERATOR
+
+  /// Standard member(s) who can edit the shared board (draw, add elements, etc.),
+  /// and also send chat messages.
+  EDITOR
+
+  /// Basic member(s) who can participate in chat but cannot modify the board.
+  MEMBER
+
+  /// Read-only participants: can view board and messages but cannot interact.
+  VIEWER
+}
+
+
+model User {
+  id        Int         @id @default(autoincrement())
+  username  String      @unique @db.VarChar(64)
+  createdAt DateTime    @default(now())
+  deletedAt DateTime
+
+  roomsCreated  Room[]  @relation("RoomCreator")
+  memberships   Membership[]
+  messages      Message[]
+}
+
+model Room {
+  id          Int         @id @default(autoincrement())
+  slug        String      @unique @db.VarChar(64)
+  createdById Int
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @default(now())
+
+  createdBy   User @relation("RoomCreator",fields: [createdById], references: [id], onDelete: Restrict)
+  memberships Membership[]
+  messages    Message[]
+  boards      BoardState[]
+
+  @@index([createdById])
+}
+
+model Membership {
+  userId    Int
+  roomId    Int
+  role      Role        @default(MEMBER)
+  joinedAt  DateTime    @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+
+  @@id([userId, roomId])
+  @@index([roomId])
+  @@index([userId])
+}
+
+model Message {
+  id        Int       @id @default(autoincrement())
+  roomId    Int
+  userId    Int
+  text      String    @db.Text
+  createdAt DateTime  @default(now())
+
+  room    Room  @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  author  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([roomId])
+  @@index([userId])
+  @@index([roomId, createdAt])
+}
+
+model BoardState {
+  id          Int         @id @default(autoincrement())
+  roomId      Int
+  payload     Json
+  updatedAt   DateTime    @default(now())
+
+  room  Room  @relation(fields: [roomId], references: [id], onDelete: Cascade)
+}
