@@ -1,28 +1,24 @@
 import { Router } from "express";
 import { prisma } from "../db/prisma";
 import { IdParam, CreateBody, UpdateBody } from "../validators/users";
+import * as bcrypt from "bcrypt";
 
 export const users = Router();
 
-/**
- * TODO:
- * hash pwd bcrypt
- * flip anon in patch (note that post cant update once the anon is created -> duplicates)
- * add location header to the post (created resource)
- */
+const PublicUser = {
+  id: true,
+  username: true,
+  email: true,
+  isAnonymous: true,
+  createdAt: true,
+};
 
 users.get("/:id", async (req, res, next) => {
   try {
     const { id } = IdParam.parse(req.params);
     const user = await prisma.user.findUniqueOrThrow({
       where: { id },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        isAnonymous: true,
-        createdAt: true,
-      },
+      select: PublicUser,
     });
     res.status(200).json(user);
   } catch (err) {
@@ -30,22 +26,30 @@ users.get("/:id", async (req, res, next) => {
   }
 });
 
-//it is either empty or full body
+/**
+ * First use of the client app -> automatic post req for anonymous user (App's logic)
+ * User wants to create an account -> post req with the userdata (User's Intent)
+ */
+
 users.post("/", async (req, res, next) => {
   try {
     const parsedBody = CreateBody.parse(req.body ?? {});
     if ("username" in parsedBody) {
       const { username, email, password } = parsedBody;
 
-      // TODO: hash password at some point
-      const pwdHash = password;
+      const pwdHash = await bcrypt.hash(password, 12);
 
       const user = await prisma.user.create({
-        data: { username, email, pwdHash, isAnonymous: false },
-        select: { id: true, createdAt: true },
+        data: {
+          username,
+          email: email.toLowerCase(),
+          pwdHash,
+          isAnonymous: false,
+        },
+        select: PublicUser,
       });
 
-      res.status(201).json(user);
+      res.status(201).location(`/users/${user.id}`).json(user);
     } else {
       const user = await prisma.$transaction(async (tx) => {
         const base = await tx.user.create({
@@ -56,17 +60,20 @@ users.post("/", async (req, res, next) => {
         return tx.user.update({
           where: { id: base.id },
           data: { username: `User${base.id}` },
-          select: { id: true, createdAt: true },
+          select: PublicUser,
         });
       });
 
-      res.status(201).json(user);
+      res.status(201).location(`/users/${user.id}`).json(user);
     }
   } catch (err) {
     next(err);
   }
 });
 
+/**
+ * User wants to switch from temp anonymous user to perm user, or update the userdata.
+ */
 users.patch("/:id", async (req, res, next) => {
   try {
     const { id } = IdParam.parse(req.params);
@@ -75,19 +82,14 @@ users.patch("/:id", async (req, res, next) => {
     const data: any = {};
 
     if (username !== undefined) data.username = username;
-    if (email !== undefined) data.email = email;
-    if (password !== undefined) data.pwdHash = password; // needs to be hashed
+    if (email !== undefined) data.email = email.toLowerCase();
+    if (password !== undefined) data.pwdHash = await bcrypt.hash(password, 12);
+    data.isAnonymous = false;
 
     const user = await prisma.user.update({
       where: { id },
       data,
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        isAnonymous: true,
-        createdAt: true,
-      },
+      select: PublicUser,
     });
 
     res.status(200).json(user);
