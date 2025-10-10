@@ -10,7 +10,8 @@ import { users } from "./routes/users";
 import { rooms } from "./routes/rooms";
 import { memberships } from "./routes/memberships";
 import { messages } from "./routes/messages";
-import { board } from "./routes/board";
+import { boards } from "./routes/boards";
+import { boardStates } from "./routes/boardStates";
 
 const app = express();
 
@@ -25,9 +26,10 @@ app.use(health);
 app.use(version);
 app.use("/users", users);
 app.use("/rooms", rooms);
+app.use("/boards", boards);
+app.use("/boardstates", boardStates);
 app.use("/memberships", memberships);
 app.use("/messages", messages);
-app.use("/boards", board);
 
 // 404
 app.use((req, res) => res.status(404).json({ ok: false, error: "Not found" }));

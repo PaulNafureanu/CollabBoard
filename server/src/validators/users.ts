@@ -1,6 +1,5 @@
 import * as z from "zod";
-
-export const IdParam = z.object({ id: z.coerce.number().int().positive() });
+import { refineFn, refineMsg } from "./common";
 
 const Username = z.string().trim().min(1).max(64);
 const Email = z.email().trim().max(255);
@@ -23,6 +22,4 @@ export const UpdateBody = z
     password: Password.optional(),
   })
   .strict()
-  .refine((obj) => Object.keys(obj).length > 0, {
-    error: "No changes provided",
-  });
+  .refine(refineFn, refineMsg);

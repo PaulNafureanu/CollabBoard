@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { prisma } from "../db/prisma";
-import { IdParam, CreateBody, UpdateBody } from "../validators/users";
+import { CreateBody, UpdateBody } from "../validators/users";
+import { IdParam } from "../validators/common";
 import * as bcrypt from "bcrypt";
 
 export const users = Router();
