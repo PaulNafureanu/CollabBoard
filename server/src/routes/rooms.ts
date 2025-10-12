@@ -119,9 +119,13 @@ rooms.post("/", async (req, res, next) => {
 
       // Create board & boardstate and sitch them as active for this new room
       await createBoard(roomTx.id, tx);
-      return roomTx;
+      // referesh to return the updated room with the active fields
+      return await tx.room.findUniqueOrThrow({
+        where: { id: roomTx.id },
+        select: PublicRoom,
+      });
     });
-    res.status(201).location(`/rooms/${room.id}`).send(room);
+    res.status(201).location(`/rooms/${room.id}`).json(room);
   } catch (err) {
     next(err);
   }
