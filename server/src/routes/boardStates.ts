@@ -2,17 +2,9 @@ import { Router } from "express";
 import { prisma } from "../db/prisma";
 import { IdParam } from "../validators/common";
 import { CreateBody } from "../validators/boardStates";
+import { PublicBoardState } from "../common/publicShapes";
 
 export const boardStates = Router();
-
-const PublicBoardState = {
-  id: true,
-  boardId: true,
-  version: true,
-  payload: true,
-  createdAt: true,
-  updatedAt: true,
-};
 
 boardStates.get("/:id", async (req, res, next) => {
   try {

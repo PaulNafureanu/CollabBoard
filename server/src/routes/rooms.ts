@@ -1,18 +1,18 @@
 import { Router } from "express";
 import { prisma } from "../db/prisma";
 import { CreateBody, UpdateBody } from "../validators/rooms";
-import { IdParam } from "../validators/common";
+import { IdParam, PageQuery } from "../validators/common";
+import {
+  getPageData,
+  PublicBoard,
+  PublicMembership,
+  PublicMessages,
+  PublicRoom,
+} from "../common/publicShapes";
 
 export const rooms = Router();
 
-const PublicRoom = {
-  id: true,
-  slug: true,
-  createdAt: true,
-  updatedAt: true,
-  activeBoardId: true,
-};
-
+// GET resources with pagination
 rooms.get("/:id", async (req, res, next) => {
   try {
     const { id } = IdParam.parse(req.params);
@@ -26,17 +26,115 @@ rooms.get("/:id", async (req, res, next) => {
   }
 });
 
+rooms.get("/:id/memberships", async (req, res, next) => {
+  try {
+    const { id: roomId } = IdParam.parse(req.params);
+    const { page, size } = PageQuery.parse(req.query);
+
+    const [totalItems, items] = await prisma.$transaction([
+      prisma.membership.count({ where: { roomId } }),
+      prisma.membership.findMany({
+        where: { roomId },
+        orderBy: [{ joinedAt: "desc" }, { id: "desc" }],
+        skip: page * size,
+        take: size,
+        select: PublicMembership,
+      }),
+    ]);
+
+    res.status(200).json(getPageData(items, page, size, totalItems));
+  } catch (err) {
+    next(err);
+  }
+});
+
+rooms.get("/:id/messages", async (req, res, next) => {
+  try {
+    const { id: roomId } = IdParam.parse(req.params);
+    const { page, size } = PageQuery.parse(req.query);
+
+    const [totalItems, items] = await prisma.$transaction([
+      prisma.message.count({ where: { roomId } }),
+      prisma.message.findMany({
+        where: { roomId },
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        skip: page * size,
+        take: size,
+        select: PublicMessages,
+      }),
+    ]);
+
+    res.status(200).json(getPageData(items, page, size, totalItems));
+  } catch (err) {
+    next(err);
+  }
+});
+
+rooms.get("/:id/boards", async (req, res, next) => {
+  try {
+    const { id: roomId } = IdParam.parse(req.params);
+    const { page, size } = PageQuery.parse(req.query);
+
+    const [totalItems, items] = await prisma.$transaction([
+      prisma.board.count({ where: { roomId } }),
+      prisma.board.findMany({
+        where: { roomId },
+        orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+        skip: page * size,
+        take: size,
+        select: PublicBoard,
+      }),
+    ]);
+
+    res.status(200).json(getPageData(items, page, size, totalItems));
+  } catch (err) {
+    next(err);
+  }
+});
+
 // TODO: includes board states init
 
-rooms.post("/", async (req, res, next) => {});
+// Modify resources in DB
+
+rooms.post("/", async (req, res, next) => {
+  try {
+    const { slug } = CreateBody.parse(req.body);
+
+    await prisma.$transaction(async (tx) => {
+      let room;
+      if (slug !== undefined) {
+        room = await tx.room.create({
+          data: { slug },
+          select: PublicRoom,
+        });
+      } else {
+        const base = await tx.room.create({ data: {}, select: { id: true } });
+
+        room = await tx.room.update({
+          where: { id: base.id },
+          data: { slug: `Room${base.id}` },
+          select: PublicRoom,
+        });
+      }
+
+      res.status(201).location(`/rooms/${room.id}`).send(room);
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 
 rooms.patch("/:id", async (req, res, next) => {
   try {
     const { id } = IdParam.parse(req.params);
-    const { slug, activeBoardId } = UpdateBody.parse(req.body);
+    const { slug, activeBoardId, activeBoardStateId } = UpdateBody.parse(
+      req.body,
+    );
     const data: any = {};
     if (slug !== undefined) data.slug = slug;
     if (activeBoardId !== undefined) data.activeBoardId = activeBoardId;
+    if (activeBoardStateId !== undefined)
+      data.activeBoardStateId = activeBoardStateId;
 
     const room = await prisma.room.update({
       where: { id },

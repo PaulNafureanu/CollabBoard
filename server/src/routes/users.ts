@@ -3,16 +3,9 @@ import { prisma } from "../db/prisma";
 import { CreateBody, UpdateBody } from "../validators/users";
 import { IdParam } from "../validators/common";
 import * as bcrypt from "bcrypt";
+import { PublicUser } from "../common/publicShapes";
 
 export const users = Router();
-
-const PublicUser = {
-  id: true,
-  username: true,
-  email: true,
-  isAnonymous: true,
-  createdAt: true,
-};
 
 users.get("/:id", async (req, res, next) => {
   try {
@@ -35,12 +28,14 @@ users.get("/:id", async (req, res, next) => {
 users.post("/", async (req, res, next) => {
   try {
     const parsedBody = CreateBody.parse(req.body ?? {});
+    let user;
+
     if ("username" in parsedBody) {
       const { username, email, password } = parsedBody;
 
       const pwdHash = await bcrypt.hash(password, 12);
 
-      const user = await prisma.user.create({
+      user = await prisma.user.create({
         data: {
           username,
           email: email.toLowerCase(),
@@ -49,10 +44,8 @@ users.post("/", async (req, res, next) => {
         },
         select: PublicUser,
       });
-
-      res.status(201).location(`/users/${user.id}`).json(user);
     } else {
-      const user = await prisma.$transaction(async (tx) => {
+      user = await prisma.$transaction(async (tx) => {
         const base = await tx.user.create({
           data: {},
           select: { id: true },
@@ -64,9 +57,8 @@ users.post("/", async (req, res, next) => {
           select: PublicUser,
         });
       });
-
-      res.status(201).location(`/users/${user.id}`).json(user);
     }
+    res.status(201).location(`/users/${user.id}`).json(user);
   } catch (err) {
     next(err);
   }
@@ -98,8 +90,11 @@ users.patch("/:id", async (req, res, next) => {
     next(err);
   }
 });
-
-users.delete("/:id", async (req, res, next) => {
+// TODO: test
+/**
+ * After deletion, membership wont have a userID ref and will cascade the deletion on membership
+ * The messages will still hold, but with null userID ref, but keep the author username
+ */ TODO: users.delete("/:id", async (req, res, next) => {
   try {
     const { id } = IdParam.parse(req.params);
     await prisma.user.delete({
