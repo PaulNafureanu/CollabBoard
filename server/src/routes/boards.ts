@@ -3,6 +3,7 @@ import { prisma } from "../db/prisma";
 import { IdParam } from "../validators/common";
 import { CreateBody, UpdateBody } from "../validators/boards";
 import { PublicBoard } from "../common/publicShapes";
+import { createBoard } from "../common/routeUtils";
 
 export const boards = Router();
 
@@ -23,13 +24,9 @@ boards.get("/:id", async (req, res, next) => {
 boards.post("/", async (req, res, next) => {
   try {
     const { roomId } = CreateBody.parse(req.body);
-    const board = await prisma.board.create({
-      data: { roomId },
-      select: PublicBoard,
-    });
+    const board = await createBoard(roomId);
     res.status(201).location(`/boards/${board.id}`);
 
-    //TODO: make it also active for the room
     //TODO: make a copy op from one room to another
   } catch (err) {
     next(err);

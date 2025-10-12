@@ -9,6 +9,8 @@ import {
   PublicMessages,
   PublicRoom,
 } from "../common/publicShapes";
+import { inTx } from "../db/inTx";
+import { createBoard } from "../common/routeUtils";
 
 export const rooms = Router();
 
@@ -92,33 +94,34 @@ rooms.get("/:id/boards", async (req, res, next) => {
   }
 });
 
-// TODO: includes board states init
-
 // Modify resources in DB
-
 rooms.post("/", async (req, res, next) => {
   try {
     const { slug } = CreateBody.parse(req.body);
 
-    await prisma.$transaction(async (tx) => {
-      let room;
+    const room = await prisma.$transaction(async (tx) => {
+      let roomTx;
+
       if (slug !== undefined) {
-        room = await tx.room.create({
+        roomTx = await tx.room.create({
           data: { slug },
           select: PublicRoom,
         });
       } else {
         const base = await tx.room.create({ data: {}, select: { id: true } });
 
-        room = await tx.room.update({
+        roomTx = await tx.room.update({
           where: { id: base.id },
           data: { slug: `Room${base.id}` },
           select: PublicRoom,
         });
       }
 
-      res.status(201).location(`/rooms/${room.id}`).send(room);
+      // Create board & boardstate and sitch them as active for this new room
+      await createBoard(roomTx.id, tx);
+      return roomTx;
     });
+    res.status(201).location(`/rooms/${room.id}`).send(room);
   } catch (err) {
     next(err);
   }

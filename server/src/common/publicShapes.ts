@@ -1,3 +1,5 @@
+import { Prisma } from "../generated/prisma";
+
 export interface PageData<T extends Object> {
   items: T[];
   page: number;
@@ -77,3 +79,5 @@ export const PublicMessages = {
   text: true,
   createdAt: true,
 };
+
+export const DefaultBoardStatePayload: Prisma.InputJsonValue = {};
