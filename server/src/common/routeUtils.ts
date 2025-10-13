@@ -25,13 +25,18 @@ const createBoardState = async (
       select: PublicBoardState,
     });
 
-    // Make the board and the new board state, the active ones in this room
+    // Make the new board state, the active ones in this room
+    // TODO: TEST observe what happens to the last state
     await db.room.update({
       where: { id: roomId },
-      data: { activeBoardId: boardId, activeBoardStateId: state.id },
+      data: { activeBoardStateId: state.id },
     });
 
-    return state;
+    // refresh for stale
+    return await db.boardState.findUniqueOrThrow({
+      where: { id: state.id },
+      select: PublicBoardState,
+    });
   });
 };
 
@@ -45,7 +50,25 @@ export const createBoard = async (
       select: PublicBoard,
     });
 
-    await createBoardState(roomId, board.id, 1, DefaultBoardStatePayload, db);
-    return board;
+    const state = await createBoardState(
+      roomId,
+      board.id,
+      1,
+      DefaultBoardStatePayload,
+      db,
+    );
+
+    return await db.board.update({
+      where: { id: board.id },
+      data: { lastState: state.id },
+      select: PublicBoard,
+    });
   });
+};
+
+export const activatePreBoardState = async (
+  boardStateId: number,
+  tx?: Prisma.TransactionClient,
+) => {
+  return await inTx(tx, async (db) => {});
 };

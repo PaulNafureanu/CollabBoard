@@ -90,7 +90,7 @@ users.patch("/:id", async (req, res, next) => {
     next(err);
   }
 });
-// TODO: test
+// TODO: test cascade
 /**
  * After deletion, membership wont have a userID ref and will cascade the deletion on membership
  * The messages will still hold, but with null userID ref, but keep the author username

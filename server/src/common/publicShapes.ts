@@ -41,7 +41,6 @@ export const PublicRoom = {
   slug: true,
   createdAt: true,
   updatedAt: true,
-  activeBoardId: true,
   activeBoardStateId: true,
 };
 
@@ -59,7 +58,7 @@ export const PublicBoard = {
   roomId: true,
   createdAt: true,
   updatedAt: true,
-  states: true,
+  lastState: true,
 };
 
 export const PublicMembership = {

@@ -117,9 +117,9 @@ rooms.post("/", async (req, res, next) => {
         });
       }
 
-      // Create board & boardstate and sitch them as active for this new room
+      // Create board & boardstate and switch the new state as active for this new room
       await createBoard(roomTx.id, tx);
-      // referesh to return the updated room with the active fields
+      // referesh to return the updated room with the active field
       return await tx.room.findUniqueOrThrow({
         where: { id: roomTx.id },
         select: PublicRoom,
@@ -134,12 +134,9 @@ rooms.post("/", async (req, res, next) => {
 rooms.patch("/:id", async (req, res, next) => {
   try {
     const { id } = IdParam.parse(req.params);
-    const { slug, activeBoardId, activeBoardStateId } = UpdateBody.parse(
-      req.body,
-    );
+    const { slug, activeBoardStateId } = UpdateBody.parse(req.body);
     const data: any = {};
     if (slug !== undefined) data.slug = slug;
-    if (activeBoardId !== undefined) data.activeBoardId = activeBoardId;
     if (activeBoardStateId !== undefined)
       data.activeBoardStateId = activeBoardStateId;
 
@@ -154,6 +151,7 @@ rooms.patch("/:id", async (req, res, next) => {
   }
 });
 
+//TODO: test if the cascade works on the fields of membership, messages, boards & boardstates
 rooms.delete("/:id", async (req, res, next) => {
   try {
     const { id } = IdParam.parse(req.params);

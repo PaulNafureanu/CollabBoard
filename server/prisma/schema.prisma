@@ -54,11 +54,8 @@ model Room {
   updatedAt DateTime @updatedAt
 
   // There is one-to-one relation between a room and a active board state. There is always 1 active board in the room.
-  activeBoardId      Int? @unique
-  activeBoardStateId Int? @unique
-
-  activeBoard      Board?      @relation("ActiveBoard", fields: [activeBoardId], references: [id], onDelete: SetNull)
-  activeBoardState BoardState? @relation("ActiveBoardState", fields: [activeBoardStateId], references: [id], onDelete: SetNull)
+  activeBoardStateId Int?        @unique
+  activeBoardState   BoardState? @relation("ActiveBoardState", fields: [activeBoardStateId], references: [id], onDelete: SetNull)
 
   memberships Membership[]
   messages    Message[]
@@ -104,9 +101,10 @@ model Board {
   roomId    Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  lastState Int?     @unique
 
-  room      Room  @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  activeFor Room? @relation("ActiveBoard")
+  state BoardState? @relation("LastState", fields: [lastState], references: [id], onDelete: SetNull)
+  room  Room        @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
   states BoardState[]
 
@@ -122,8 +120,9 @@ model BoardState {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  board     Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  activeFor Room? @relation("ActiveBoardState")
+  board     Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  isLastFor Board? @relation("LastState")
+  activeFor Room?  @relation("ActiveBoardState")
 
   @@unique([boardId, version])
   @@index([boardId])
