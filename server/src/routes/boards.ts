@@ -3,11 +3,17 @@ import { prisma } from "../db/prisma";
 import { IdParam, PageQuery } from "../validators/common";
 import { BoardQuery, CreateBody, UpdateBody } from "../validators/boards";
 import {
+  DefaultBoardStatePayload,
   getPageData,
   PublicBoard,
   PublicBoardState,
+  PublicRoom,
 } from "../common/publicShapes";
-import { createBoard } from "../common/routeUtils";
+import {
+  activatePreBoardState,
+  createBoard,
+  getActivatedRoom,
+} from "../common/routeUtils";
 
 export const boards = Router();
 
@@ -76,51 +82,64 @@ boards.patch("/:id", async (req, res, next) => {
      * the room receiver will have the active state the last state of this new board
      */
 
-    const board = await prisma.board.findUniqueOrThrow({
-      where: { id },
-      select: PublicBoard,
-    });
-
-    if (copy) {
-    } else {
-      // Move:
-
-      // const SenderRoom = await prisma.room.findUniqueOrThrow(where:{id:})
-
-      const senderRoomBoards = await prisma.board.findMany({
-        where: { roomId: board.roomId, id: { not: board.id } },
-        take: 1,
-        orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
-        select: { ...PublicBoard },
+    const updatedBoard = await prisma.$transaction(async (tx) => {
+      const board = await tx.board.findUniqueOrThrow({
+        where: { id },
+        select: PublicBoard,
       });
 
-      if (senderRoomBoards.length > 0) {
-        await prisma.room.update({
-          where: { id: board.roomId },
-          data: { activeBoardStateId: 0 },
+      if (copy) {
+        // Copy:
+
+        const states = await tx.boardState.findMany({
+          where: { boardId: board.id },
+          select: PublicBoardState,
+        });
+
+        const newBoard = await tx.board.create({
+          data: { roomId },
+          select: PublicBoard,
+        });
+
+        await tx.boardState.createMany({
+          data: states.map((state) => {
+            return {
+              boardId: newBoard.id,
+              payload: state.payload ?? DefaultBoardStatePayload,
+              version: state.version,
+            };
+          }),
+        });
+
+        const { id: lastState } = await tx.boardState.findFirstOrThrow({
+          where: { boardId: newBoard.id },
+          orderBy: [{ version: "desc", id: "desc" }],
+          take: 1,
+        });
+
+        return await tx.board.update({
+          where: { id: newBoard.id },
+          data: { lastState },
+          select: PublicBoard,
+        });
+      } else {
+        // Move:
+
+        await getActivatedRoom(board.roomId, board.id, board.lastState, tx);
+        await tx.board.update({ where: { id: board.id }, data: { roomId } });
+        await tx.room.update({
+          where: { id: roomId },
+          data: { activeBoardStateId: board.lastState },
         });
       }
-    }
 
-    // const base = await prisma.board.findUniqueOrThrow({
-    //   where: { id },
-    //   select: PublicBoard,
-    // });
+      return await tx.board.findUniqueOrThrow({
+        where: { id },
+        select: PublicBoard,
+      });
+    });
 
-    // await prisma.room.update({
-    //   where: { id: base.id },
-    //   data: {},
-    // });
-
-    // const board = await prisma.board.update({
-    //   where: { id },
-    //   data: { roomId },
-    //   select: PublicBoard,
-    // });
-
-    res.status(200).json(board);
-
-    //TODO: if this board was the active board in a room, make a board the active board in that room
+    res.status(200).json(updatedBoard);
   } catch (err) {
     next(err);
   }
@@ -129,7 +148,17 @@ boards.patch("/:id", async (req, res, next) => {
 boards.delete("/:id", async (req, res, next) => {
   try {
     const { id } = IdParam.parse(req.params);
-    await prisma.board.delete({ where: { id } });
+    await prisma.$transaction(async (tx) => {
+      const board = await tx.board.findUniqueOrThrow({
+        where: { id },
+        select: PublicBoard,
+      });
+
+      await getActivatedRoom(board.roomId, board.id, board.lastState, tx);
+
+      await tx.board.delete({ where: { id } });
+    });
+
     res.status(204).send();
   } catch (err) {
     next(err);

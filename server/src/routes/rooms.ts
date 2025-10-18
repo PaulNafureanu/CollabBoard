@@ -1,7 +1,4 @@
 import { Router } from "express";
-import { prisma } from "../db/prisma";
-import { CreateBody, UpdateBody } from "../validators/rooms";
-import { IdParam, PageQuery } from "../validators/common";
 import {
   getPageData,
   PublicBoard,
@@ -9,8 +6,10 @@ import {
   PublicMessages,
   PublicRoom,
 } from "../common/publicShapes";
-import { inTx } from "../db/inTx";
 import { createBoard } from "../common/routeUtils";
+import { prisma } from "../db/prisma";
+import { IdParam, PageQuery } from "../validators/common";
+import { CreateBody, UpdateBody } from "../validators/rooms";
 
 export const rooms = Router();
 
@@ -94,7 +93,7 @@ rooms.get("/:id/boards", async (req, res, next) => {
   }
 });
 
-// Modify resources in DB
+// Add/Modify/remove resources in DB
 rooms.post("/", async (req, res, next) => {
   try {
     const { slug } = CreateBody.parse(req.body);

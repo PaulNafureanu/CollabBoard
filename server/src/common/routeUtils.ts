@@ -5,6 +5,7 @@ import {
   DefaultBoardStatePayload,
   PublicBoard,
   PublicBoardState,
+  PublicRoom,
 } from "./publicShapes";
 
 // Create a state AND sets it as active in the room
@@ -26,7 +27,7 @@ const createBoardState = async (
     });
 
     // Make the new board state, the active ones in this room
-    // TODO: TEST observe what happens to the last state
+    // TODO: TEST observe what happens to the prev state
     await db.room.update({
       where: { id: roomId },
       data: { activeBoardStateId: state.id },
@@ -67,8 +68,48 @@ export const createBoard = async (
 };
 
 export const activatePreBoardState = async (
-  boardStateId: number,
+  roomId: number,
+  boardId: number,
   tx?: Prisma.TransactionClient,
 ) => {
-  return await inTx(tx, async (db) => {});
+  return await inTx(tx, async (db) => {
+    const lastBoard = await db.board.findFirstOrThrow({
+      where: { roomId, id: { not: boardId } },
+      orderBy: [{ updatedAt: "desc", id: "desc" }],
+      take: 1,
+    });
+
+    await db.room.update({
+      where: { id: roomId },
+      data: { activeBoardStateId: lastBoard.lastState },
+    });
+  });
+};
+
+export const getActivatedRoom = async (
+  roomId: number,
+  boardId: number,
+  lastState: number | null,
+  tx?: Prisma.TransactionClient,
+) => {
+  return await inTx(tx, async (db) => {
+    const { activeBoardStateId } = await db.room.findUniqueOrThrow({
+      where: { id: roomId },
+      select: PublicRoom,
+    });
+
+    if (activeBoardStateId === lastState) {
+      const countBoards = await db.board.count({
+        where: { roomId },
+      });
+      if (countBoards === 1) await createBoard(roomId, db);
+      else if (countBoards > 1)
+        await activatePreBoardState(roomId, boardId, db);
+    }
+
+    return await db.room.findUniqueOrThrow({
+      where: { id: roomId },
+      select: PublicRoom,
+    });
+  });
 };
