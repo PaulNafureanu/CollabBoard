@@ -50,7 +50,6 @@ export const PublicBoardState = {
   version: true,
   payload: true,
   createdAt: true,
-  updatedAt: true,
 };
 
 export const PublicBoard = {

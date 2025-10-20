@@ -40,7 +40,7 @@ boards.get("/:id/boardstates", async (req, res, next) => {
       prisma.boardState.count({ where: { boardId } }),
       prisma.boardState.findMany({
         where: { boardId },
-        orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+        orderBy: [{ version: "desc" }, { id: "desc" }],
         skip: page * size,
         take: size,
         select: PublicBoardState,

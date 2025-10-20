@@ -118,7 +118,6 @@ model BoardState {
   version   Int      @default(1)
   payload   Json
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
   board     Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
   isLastFor Board? @relation("LastState")
@@ -127,5 +126,4 @@ model BoardState {
   @@unique([boardId, version])
   @@index([boardId])
   @@index([boardId, version])
-  @@index([boardId, updatedAt])
 }

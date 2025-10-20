@@ -72,7 +72,6 @@ boardStates.delete("/:id", async (req, res, next) => {
       let prevState = await tx.boardState.findFirst({
         where: { boardId: board.id },
         orderBy: [{ version: "desc", id: "desc" }],
-        take: 1,
         select: PublicBoardState,
       });
 
