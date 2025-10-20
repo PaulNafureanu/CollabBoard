@@ -3,7 +3,7 @@ import {
   getPageData,
   PublicBoard,
   PublicMembership,
-  PublicMessages,
+  PublicMessage,
   PublicRoom,
 } from "../common/publicShapes";
 import { createBoard } from "../common/routeUtils";
@@ -61,7 +61,7 @@ rooms.get("/:id/messages", async (req, res, next) => {
         orderBy: [{ createdAt: "desc" }, { id: "desc" }],
         skip: page * size,
         take: size,
-        select: PublicMessages,
+        select: PublicMessage,
       }),
     ]);
 

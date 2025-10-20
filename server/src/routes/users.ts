@@ -1,9 +1,13 @@
-import { Router } from "express";
-import { prisma } from "../db/prisma";
-import { CreateBody, UpdateBody } from "../validators/users";
-import { IdParam } from "../validators/common";
 import * as bcrypt from "bcrypt";
-import { PublicUser } from "../common/publicShapes";
+import { Router } from "express";
+import {
+  getPageData,
+  PublicMembership,
+  PublicUser,
+} from "../common/publicShapes";
+import { prisma } from "../db/prisma";
+import { IdParam, PageQuery } from "../validators/common";
+import { CreateBody, UpdateBody } from "../validators/users";
 
 export const users = Router();
 
@@ -19,6 +23,30 @@ users.get("/:id", async (req, res, next) => {
     next(err);
   }
 });
+
+users.get("/:id/memberships", async (req, res, next) => {
+  try {
+    const { id: userId } = IdParam.parse(req.params);
+    const { page, size } = PageQuery.parse(req.query);
+
+    const [totalItems, items] = await prisma.$transaction([
+      prisma.membership.count({ where: { userId } }),
+      prisma.membership.findMany({
+        where: { userId },
+        orderBy: [{ joinedAt: "desc" }, { id: "desc" }],
+        skip: page * size,
+        take: size,
+        select: PublicMembership,
+      }),
+    ]);
+
+    res.status(200).json(getPageData(items, page, size, totalItems));
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Add getting memberships & messages
 
 /**
  * First use of the client app -> automatic post req for anonymous user (App's logic)

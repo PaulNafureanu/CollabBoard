@@ -68,7 +68,7 @@ export const PublicMembership = {
   joinedAt: true,
 };
 
-export const PublicMessages = {
+export const PublicMessage = {
   id: true,
   roomId: true,
   userId: true,

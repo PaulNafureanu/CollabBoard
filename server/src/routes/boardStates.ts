@@ -1,13 +1,13 @@
 import { Router } from "express";
-import { prisma } from "../db/prisma";
-import { IdParam } from "../validators/common";
-import { CreateBody } from "../validators/boardStates";
 import {
   DefaultBoardStatePayload,
   PublicBoard,
   PublicBoardState,
 } from "../common/publicShapes";
-import { createBoardState, getActivatedRoom } from "../common/routeUtils";
+import { createBoardState } from "../common/routeUtils";
+import { prisma } from "../db/prisma";
+import { CreateBody } from "../validators/boardStates";
+import { IdParam } from "../validators/common";
 
 export const boardStates = Router();
 

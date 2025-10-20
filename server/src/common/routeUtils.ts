@@ -1,6 +1,5 @@
-import { JSONType } from "zod/v4/core/util.cjs";
 import { inTx } from "../db/inTx";
-import { Prisma, PrismaClient } from "../generated/prisma";
+import { Prisma } from "../generated/prisma";
 import {
   DefaultBoardStatePayload,
   PublicBoard,

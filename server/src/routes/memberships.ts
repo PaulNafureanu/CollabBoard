@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { prisma } from "../db/prisma";
-import { IdParam } from "../validators/common";
 import { PublicMembership } from "../common/publicShapes";
-import { CreateBody, UpdateBody } from "../validators/memberships";
+import { prisma } from "../db/prisma";
 import { Role } from "../generated/prisma";
+import { IdParam } from "../validators/common";
+import { CreateBody, UpdateBody } from "../validators/memberships";
 
 export const memberships = Router();
 
