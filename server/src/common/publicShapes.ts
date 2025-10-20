@@ -62,11 +62,10 @@ export const PublicBoard = {
 
 export const PublicMembership = {
   id: true,
-  roomId: true,
   userId: true,
-  author: true,
-  text: true,
-  createAt: true,
+  roomId: true,
+  role: true,
+  joinedAt: true,
 };
 
 export const PublicMessages = {

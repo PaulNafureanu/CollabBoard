@@ -1,19 +1,14 @@
 import { Router } from "express";
-import { prisma } from "../db/prisma";
-import { IdParam, PageQuery } from "../validators/common";
-import { BoardQuery, CreateBody, UpdateBody } from "../validators/boards";
 import {
   DefaultBoardStatePayload,
   getPageData,
   PublicBoard,
   PublicBoardState,
-  PublicRoom,
 } from "../common/publicShapes";
-import {
-  activatePreBoardState,
-  createBoard,
-  getActivatedRoom,
-} from "../common/routeUtils";
+import { createBoard, getActivatedRoom } from "../common/routeUtils";
+import { prisma } from "../db/prisma";
+import { BoardQuery, CreateBody, UpdateBody } from "../validators/boards";
+import { IdParam, PageQuery } from "../validators/common";
 
 export const boards = Router();
 
