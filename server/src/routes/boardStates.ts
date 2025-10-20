@@ -2,7 +2,12 @@ import { Router } from "express";
 import { prisma } from "../db/prisma";
 import { IdParam } from "../validators/common";
 import { CreateBody } from "../validators/boardStates";
-import { PublicBoardState } from "../common/publicShapes";
+import {
+  DefaultBoardStatePayload,
+  PublicBoard,
+  PublicBoardState,
+} from "../common/publicShapes";
+import { createBoardState, getActivatedRoom } from "../common/routeUtils";
 
 export const boardStates = Router();
 
@@ -24,12 +29,21 @@ boardStates.post("/", async (req, res, next) => {
   try {
     const { boardId, version, payload } = CreateBody.parse(req.body);
 
-    const state = await prisma.boardState.create({
-      data: { boardId, payload: payload ?? {}, version: version + 1 },
-      select: PublicBoardState,
+    const state = await prisma.$transaction(async (tx) => {
+      const board = await tx.board.findUniqueOrThrow({
+        where: { id: boardId },
+        select: PublicBoard,
+      });
+
+      return await createBoardState(
+        board.roomId,
+        boardId,
+        version, // the client sends the (new) version counter
+        payload ?? DefaultBoardStatePayload,
+        tx,
+      );
     });
 
-    // TODO: if active board, make this state the active state in the room
     res.status(201).location(`/boardstates/${state.id}`).json(state);
   } catch (err) {
     next(err);
@@ -39,17 +53,49 @@ boardStates.post("/", async (req, res, next) => {
 boardStates.delete("/:id", async (req, res, next) => {
   try {
     const { id } = IdParam.parse(req.params);
-    const state = await prisma.boardState.findUniqueOrThrow({
-      where: { id },
-      select: PublicBoardState,
+
+    await prisma.$transaction(async (tx) => {
+      const state = await tx.boardState.findUniqueOrThrow({
+        where: { id },
+        select: PublicBoardState,
+      });
+
+      const board = await tx.board.findUniqueOrThrow({
+        where: { id: state.boardId },
+        select: PublicBoard,
+      });
+
+      await tx.boardState.deleteMany({
+        where: { boardId: state.boardId, version: { gte: state.version } },
+      });
+
+      let prevState = await tx.boardState.findFirst({
+        where: { boardId: board.id },
+        orderBy: [{ version: "desc", id: "desc" }],
+        take: 1,
+        select: PublicBoardState,
+      });
+
+      if (!prevState)
+        prevState = await tx.boardState.create({
+          data: {
+            boardId: board.id,
+            payload: DefaultBoardStatePayload,
+            version: 1,
+          },
+        });
+
+      await tx.board.update({
+        where: { id: board.id },
+        data: { lastState: prevState.id },
+      });
+
+      await tx.room.update({
+        where: { id: board.roomId },
+        data: { activeBoardStateId: prevState.id },
+      });
     });
 
-    // Delete all boardstates equal or higher in version number within the same board.
-    await prisma.boardState.deleteMany({
-      where: { boardId: state.boardId, version: { gte: state.version } },
-    });
-
-    // TODO: If one of the deleted states is the active state, make the state.version - 1 the active one, or create a new blank state for the current room
     res.status(204).send();
   } catch (err) {
     next(err);

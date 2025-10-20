@@ -78,7 +78,7 @@ boards.patch("/:id", async (req, res, next) => {
      *
      * Copy from sender room to reveiver room:
      * create a new board
-     * create all board states with the same payloads as the original board state
+     * create all board states with the same payloads as the original board states
      * the room receiver will have the active state the last state of this new board
      */
 
@@ -91,16 +91,19 @@ boards.patch("/:id", async (req, res, next) => {
       if (copy) {
         // Copy:
 
+        // Get all states from sender board
         const states = await tx.boardState.findMany({
           where: { boardId: board.id },
           select: PublicBoardState,
         });
 
+        // Create a new board
         const newBoard = await tx.board.create({
           data: { roomId },
           select: PublicBoard,
         });
 
+        // Copy (create) board states to the new board
         await tx.boardState.createMany({
           data: states.map((state) => {
             return {
@@ -111,12 +114,20 @@ boards.patch("/:id", async (req, res, next) => {
           }),
         });
 
+        // Get the last board state by version
         const { id: lastState } = await tx.boardState.findFirstOrThrow({
           where: { boardId: newBoard.id },
           orderBy: [{ version: "desc", id: "desc" }],
           take: 1,
         });
 
+        // Set the room active state to that board state
+        await tx.room.update({
+          where: { id: roomId },
+          data: { activeBoardStateId: lastState },
+        });
+
+        // Return the new board with the updated last state version
         return await tx.board.update({
           where: { id: newBoard.id },
           data: { lastState },

@@ -9,7 +9,7 @@ import {
 } from "./publicShapes";
 
 // Create a state AND sets it as active in the room
-const createBoardState = async (
+export const createBoardState = async (
   roomId: number,
   boardId: number,
   version: number,
@@ -20,14 +20,14 @@ const createBoardState = async (
     const state = await db.boardState.create({
       data: {
         boardId,
-        payload: payload ?? {},
+        payload: payload ?? DefaultBoardStatePayload,
         version,
       },
       select: PublicBoardState,
     });
 
     // Make the new board state, the active ones in this room
-    // TODO: TEST observe what happens to the prev state
+    // TODO: TEST observe what happens to the prev active state
     await db.room.update({
       where: { id: roomId },
       data: { activeBoardStateId: state.id },
