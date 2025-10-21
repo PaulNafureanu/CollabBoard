@@ -26,7 +26,6 @@ export const createBoardState = async (
     });
 
     // Make the new board state, the active ones in this room
-    // TODO: TEST observe what happens to the prev active state
     await db.room.update({
       where: { id: roomId },
       data: { activeBoardStateId: state.id },

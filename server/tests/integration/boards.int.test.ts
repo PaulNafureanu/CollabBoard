@@ -172,7 +172,7 @@ describe("PATCH /boards/:id (move/copy)", () => {
     });
 
     // Receiver active is the moved board last state
-    expect(afterReceiver!.activeBoardStateId).toBe(movedLast); //TODO:
+    expect(afterReceiver!.activeBoardStateId).toBe(movedLast);
 
     // Sender active is still valid and NOT the moved board's state
     expect(afterSender!.activeBoardStateId).not.toBe(movedLast);

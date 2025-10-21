@@ -150,7 +150,6 @@ rooms.patch("/:id", async (req, res, next) => {
   }
 });
 
-//TODO: test if the cascade works on the fields of membership, messages, boards & boardstates
 rooms.delete("/:id", async (req, res, next) => {
   try {
     const { id } = IdParam.parse(req.params);
