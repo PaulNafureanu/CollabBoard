@@ -112,7 +112,7 @@ boards.patch("/:id", async (req, res, next) => {
         // Get the last board state by version
         const { id: lastState } = await tx.boardState.findFirstOrThrow({
           where: { boardId: newBoard.id },
-          orderBy: [{ version: "desc", id: "desc" }],
+          orderBy: [{ version: "desc" }, { id: "desc" }],
           take: 1,
         });
 
@@ -130,12 +130,17 @@ boards.patch("/:id", async (req, res, next) => {
         });
       } else {
         // Move:
+        const prevLastState = board.lastState;
 
         await getActivatedRoom(board.roomId, board.id, board.lastState, tx);
-        await tx.board.update({ where: { id: board.id }, data: { roomId } });
+        await tx.board.update({
+          where: { id: board.id },
+          data: { roomId },
+          select: PublicBoard,
+        });
         await tx.room.update({
           where: { id: roomId },
-          data: { activeBoardStateId: board.lastState },
+          data: { activeBoardStateId: prevLastState },
         });
       }
 

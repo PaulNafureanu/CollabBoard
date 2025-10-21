@@ -74,7 +74,7 @@ export const activatePreBoardState = async (
   return await inTx(tx, async (db) => {
     const lastBoard = await db.board.findFirstOrThrow({
       where: { roomId, id: { not: boardId } },
-      orderBy: [{ updatedAt: "desc", id: "desc" }],
+      orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
       take: 1,
     });
 
