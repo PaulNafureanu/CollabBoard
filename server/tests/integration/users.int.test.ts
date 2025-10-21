@@ -92,7 +92,7 @@ describe("POST /users", () => {
   it("creates named user, hashes password, normalizes email", async () => {
     const res = await request(app)
       .post("/users")
-      .send({ username: "Moody", email: "M@x.com", password: "s3cret" })
+      .send({ username: "Moody", email: "M@x.com", password: "s3cret12345678" })
       .expect(201);
 
     expect(res.headers.location).toMatch(/^\/users\/\d+$/);
@@ -101,7 +101,7 @@ describe("POST /users", () => {
     const dbUser = await prisma.user.findUnique({ where: { id } });
     expect(dbUser?.isAnonymous).toBe(false);
     expect(dbUser?.email).toBe("m@x.com");
-    expect(await bcrypt.compare("s3cret", dbUser!.pwdHash!)).toBe(true);
+    expect(await bcrypt.compare("s3cret12345678", dbUser!.pwdHash!)).toBe(true);
     expect(res.body.pwdHash).toBeUndefined();
   });
 
