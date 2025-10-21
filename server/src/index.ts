@@ -12,6 +12,7 @@ import { memberships } from "./routes/memberships";
 import { messages } from "./routes/messages";
 import { boards } from "./routes/boards";
 import { boardStates } from "./routes/boardStates";
+import { errorHandler } from "./middleware/errors";
 
 const app = express();
 
@@ -30,9 +31,7 @@ app.use("/boards", boards);
 app.use("/boardstates", boardStates);
 app.use("/memberships", memberships);
 app.use("/messages", messages);
-
-// 404
-app.use((req, res) => res.status(404).json({ ok: false, error: "Not found" }));
+app.use(errorHandler);
 
 const PORT = process.env.PORT ?? 3000;
 
