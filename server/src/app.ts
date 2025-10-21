@@ -5,11 +5,12 @@ import { boards } from "./routes/boards";
 import { boardStates } from "./routes/boardStates";
 import { memberships } from "./routes/memberships";
 import { messages } from "./routes/messages";
-import { errorHandler } from "./middleware/errors";
+import { errorHandler, jsonParseGuard } from "./middleware/errors";
 
 export function makeApp() {
   const app = express();
   app.use(express.json());
+  app.use(jsonParseGuard);
 
   app.use("/users", users);
   app.use("/rooms", rooms);

@@ -14,7 +14,6 @@ type ErrBody = {
 };
 
 // Optional: handle malformed JSON produced by express.json()
-// Mount this BEFORE routes in app.ts: app.use(jsonParseGuard);
 export function jsonParseGuard(
   err: any,
   _req: Request,
@@ -40,8 +39,10 @@ export function errorHandler(
   res: Response,
   _next: NextFunction,
 ) {
-  // eslint-disable-next-line no-console
-  console.error(err);
+  if (process.env.NODE_ENV !== "test") {
+    // eslint-disable-next-line no-console
+    console.error(err);
+  }
 
   const isDev = process.env.NODE_ENV !== "production";
 
