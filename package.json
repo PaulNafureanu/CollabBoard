@@ -13,7 +13,8 @@
     "dev": "concurrently -n client,server -c auto \"npm:dev --workspace=@collabboard/client\" \"npm:dev --workspace=@collabboard/server\"",
     "dev:client": "npm run dev --workspace=@collabboard/client",
     "dev:server": "npm run dev --workspace=@collabboard/server",
-    "build": "npm run build:client && npm run build:server",
+    "build": "npm run build:shared && npm run build:client && npm run build:server",
+    "build:shared": "npm run build --workspace=@collabboard/shared",
     "build:client": "npm run build --workspace=@collabboard/client",
     "build:server": "npm run build --workspace=@collabboard/server",
     "test:server": "npm run test -w @collabboard/server",
@@ -22,7 +23,7 @@
     "start": "npm run start --workspace=@collabboard/server",
     "lint": "eslint .",
     "format": "prettier -w .",
-    "typecheck": "tsc -b client server"
+    "typecheck": "tsc -b packages/shared client server"
   },
   "keywords": [],
   "author": "Paul Nafureanu",
