@@ -17,15 +17,13 @@ import { messages } from "./routes/messages";
 import { rooms } from "./routes/rooms";
 import { users } from "./routes/users";
 import { version } from "./routes/version";
+import { strToArray } from "./utils/stringUtils";
 
 const app = express();
 
 // CORS
 const corsOriginEnv = process.env.CORS_ORIGIN ?? "http://localhost:5173";
-const corsOrigin =
-  typeof corsOriginEnv === "string" && corsOriginEnv.includes(",")
-    ? corsOriginEnv.split(",").map((s) => s.trim())
-    : corsOriginEnv;
+const corsOrigin = strToArray(corsOriginEnv);
 
 app.use(cors({ origin: corsOrigin, credentials: true }));
 app.use(express.json({ limit: "1mb" }));
@@ -49,9 +47,17 @@ app.use(errorHandler);
 // HTTP server and attach Socket.IO to it
 const server = http.createServer(app);
 
+const clientOrigins = strToArray(
+  process.env.CLIENT_ORIGIN ?? "http://localhost:5173",
+);
+
 const io = new IOServer(server, {
   path: "/socket.io",
-  cors: { origin: process.env.CLIENT_ORIGIN ?? "http://localhost:5173" },
+  cors: {
+    origin: clientOrigins,
+    credentials: true,
+    methods: ["GET", "POST"],
+  },
 });
 
 const redis = new Redis(process.env.REDIS_URL ?? "redis://localhost:6379");
