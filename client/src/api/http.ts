@@ -13,6 +13,6 @@ http.interceptors.response.use(
   (res) => res,
   (err: AxiosError) => {
     // TODO: Error handler
-    return err;
+    return Promise.reject(err);
   },
 );
