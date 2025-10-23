@@ -1,0 +1,1 @@
+{"root":["./src/index.ts","./src/types/realtime.ts","./src/validators/realtime/realtime.ts","./src/validators/routes/boardStates.ts","./src/validators/routes/boards.ts","./src/validators/routes/common.ts","./src/validators/routes/memberships.ts","./src/validators/routes/messages.ts","./src/validators/routes/rooms.ts","./src/validators/routes/users.ts"],"version":"5.9.3"}

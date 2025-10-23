@@ -1,2 +1,9 @@
 export * from "./types/realtime";
-export * from "./validators/realtime";
+export * from "./validators/realtime/realtime";
+export * as Boards from "./validators/routes/boards";
+export * as BoardStates from "./validators/routes/boardStates";
+export * as Common from "./validators/routes/common";
+export * as Memberships from "./validators/routes/memberships";
+export * as Messages from "./validators/routes/messages";
+export * as Rooms from "./validators/routes/rooms";
+export * as Users from "./validators/routes/users";

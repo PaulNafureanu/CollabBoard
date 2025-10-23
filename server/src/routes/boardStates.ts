@@ -6,8 +6,10 @@ import {
 } from "../common/publicShapes";
 import { createBoardState } from "../common/routeUtils";
 import { prisma } from "../db/prisma";
-import { CreateBody } from "../validators/boardStates";
-import { IdParam } from "../validators/common";
+import { BoardStates, Common } from "@collabboard/shared";
+
+const { CreateBody } = BoardStates.default;
+const { IdParam } = Common.default;
 
 export const boardStates = Router();
 

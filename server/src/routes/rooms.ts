@@ -8,8 +8,9 @@ import {
 } from "../common/publicShapes";
 import { createBoard } from "../common/routeUtils";
 import { prisma } from "../db/prisma";
-import { IdParam, PageQuery } from "../validators/common";
-import { CreateBody, UpdateBody } from "../validators/rooms";
+import { Rooms, Common } from "@collabboard/shared";
+const { CreateBody, UpdateBody } = Rooms.default;
+const { IdParam, PageQuery } = Common.default;
 
 export const rooms = Router();
 

@@ -39,10 +39,7 @@ export function errorHandler(
   res: Response,
   _next: NextFunction,
 ) {
-  if (process.env.NODE_ENV !== "test") {
-    // eslint-disable-next-line no-console
-    console.error(err);
-  }
+  if (process.env.NODE_ENV !== "test") console.error(err);
 
   const isDev = process.env.NODE_ENV !== "production";
 

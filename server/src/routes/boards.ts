@@ -7,8 +7,10 @@ import {
 } from "../common/publicShapes";
 import { createBoard, getActivatedRoom } from "../common/routeUtils";
 import { prisma } from "../db/prisma";
-import { BoardQuery, CreateBody, UpdateBody } from "../validators/boards";
-import { IdParam, PageQuery } from "../validators/common";
+import { Boards, Common } from "@collabboard/shared";
+
+const { BoardQuery, CreateBody, UpdateBody } = Boards.default;
+const { IdParam, PageQuery } = Common.default;
 
 export const boards = Router();
 

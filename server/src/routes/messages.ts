@@ -1,8 +1,10 @@
 import { Router } from "express";
 import { PublicMessage, PublicUser } from "../common/publicShapes";
 import { prisma } from "../db/prisma";
-import { IdParam } from "../validators/common";
-import { CreateBody, UpdateBody } from "../validators/messages";
+
+import { Messages, Common } from "@collabboard/shared";
+const { CreateBody, UpdateBody } = Messages.default;
+const { IdParam } = Common.default;
 
 export const messages = Router();
 

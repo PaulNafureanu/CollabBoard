@@ -6,8 +6,9 @@ import {
   PublicUser,
 } from "../common/publicShapes";
 import { prisma } from "../db/prisma";
-import { IdParam, PageQuery } from "../validators/common";
-import { CreateBody, UpdateBody } from "../validators/users";
+import { Users, Common } from "@collabboard/shared";
+const { CreateBody, UpdateBody } = Users.default;
+const { IdParam, PageQuery } = Common.default;
 
 export const users = Router();
 

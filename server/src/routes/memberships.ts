@@ -2,8 +2,10 @@ import { Router } from "express";
 import { PublicMembership } from "../common/publicShapes";
 import { prisma } from "../db/prisma";
 import { Role } from "../generated/prisma";
-import { IdParam } from "../validators/common";
-import { CreateBody, UpdateBody } from "../validators/memberships";
+import { Memberships, Common } from "@collabboard/shared";
+
+const { CreateBody, UpdateBody } = Memberships.default;
+const { IdParam } = Common.default;
 
 export const memberships = Router();
 
