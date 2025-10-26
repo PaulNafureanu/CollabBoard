@@ -13,6 +13,28 @@
  *
  */
 
+import { Role } from "./routes";
+
+/**
+ * DB Tables: Users, Rooms, Memberships, Messages, Boards, BoardStates
+ * What needs broadcast?
+ *
+ * - Room updates (slug / active boardstate)
+ * - Memberships (who joins / exits and changed roles)
+ * - Messages (new message / typing)
+ * - Board / Board States
+ */
+
+// --- Operational / Control ----
+
+// S broadcast after REST
+export type RoomMetadata = {
+  slug: string;
+  activeBoardStateId: number;
+};
+
+// --- Memberships / Access Control ---
+
 // S To Admins / Mods
 export type JoinRequest = {
   roomId: number;
@@ -45,6 +67,13 @@ export type UserJoined = {
   joinedAt: number;
 };
 
+// On disconnect or membership delete
+export type UserLeft = {
+  roomId: number;
+  userId: number;
+  username: string;
+};
+
 // ───── Joining & state ─────
 
 // Client → Server
@@ -55,6 +84,7 @@ export type JoinRoom = {
 export type UserData = {
   userId: number;
   username: string;
+  role: Role; // promotion/demotion/removal
 };
 
 // Server → Client (hydrate just-joined client)
@@ -74,6 +104,29 @@ export type CursorMove = {
   x: number;
   y: number;
   ts: number;
+};
+
+// --- Chat / Communication ---
+
+// S to broadcast
+export type ChatMessage = {
+  userId: number;
+  username: string;
+  message: string;
+  createdAt: number;
+};
+
+// C -> S -> Broadcast
+export type Typing = {
+  userId: number;
+  username: string;
+};
+
+// --- Board Collab ---
+
+// C -> S
+export type BoardUpdates = {
+  payload: string; //partil dif updates
 };
 
 // ───── Socket.IO typings ─────
