@@ -41,6 +41,7 @@ memberships.post("/", async (req, res, next) => {
   }
 });
 
+// TODO: only moderators+ can edit the user roles (check)
 memberships.patch("/:id", async (req, res, next) => {
   try {
     const { id } = IdParam.parse(req.params);

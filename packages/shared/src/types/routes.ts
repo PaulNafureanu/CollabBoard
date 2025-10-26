@@ -14,6 +14,8 @@ export enum Role {
   EDITOR,
   MEMBER,
   VIEWER,
+  PENDING,
+  BANNED,
 }
 
 export type PublicUser = {

@@ -50,6 +50,8 @@ boards.get("/:id/boardstates", async (req, res, next) => {
   }
 });
 
+//TODO: update for the name field
+
 boards.post("/", async (req, res, next) => {
   try {
     const { roomId } = CreateBody.parse(req.body);

@@ -7,7 +7,7 @@ import { Server as IOServer } from "socket.io";
 
 import helmet from "helmet";
 import { errorHandler, jsonParseGuard } from "./middleware/errors";
-import { wireCursor } from "./realtime";
+import { wireRealtime } from "./realtime";
 import { boards } from "./routes/boards";
 import { boardStates } from "./routes/boardStates";
 import { health } from "./routes/health";
@@ -18,6 +18,7 @@ import { rooms } from "./routes/rooms";
 import { users } from "./routes/users";
 import { version } from "./routes/version";
 import { strToArray } from "./utils/stringUtils";
+import { setIO } from "./realtime/io";
 
 const app = express();
 
@@ -60,13 +61,15 @@ const io = new IOServer(server, {
   },
 });
 
+setIO(io);
+
 const redis = new Redis(process.env.REDIS_URL ?? "redis://localhost:6379");
 
 // Basic Redis connection logging
 redis.on("connect", () => console.log("[redis] connected"));
 redis.on("error", (err) => console.error("[redis] error:", err.message));
 
-wireCursor(io, redis);
+wireRealtime(io, redis);
 
 const PORT = Number(process.env.PORT ?? 3000);
 server.listen(PORT, () => {

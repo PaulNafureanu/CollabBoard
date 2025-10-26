@@ -32,6 +32,12 @@ enum Role {
 
   // Read-only participants: can view board and messages but cannot interact.
   VIEWER
+
+  // Users waiting for approval to join the room.
+  PENDING
+
+  // Users that cannot send new join approval requests.
+  BANNED
 }
 
 model User {
@@ -99,6 +105,7 @@ model Message {
 model Board {
   id        Int      @id @default(autoincrement())
   roomId    Int
+  name      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   lastState Int?     @unique
