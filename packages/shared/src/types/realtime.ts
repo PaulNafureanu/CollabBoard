@@ -1,152 +1,166 @@
-/**
- * Flows:
- *
- * Flow I:
- * User request joins -> POST /memberships -> S emit join_request to Admins/Mods & emit join_pending to User -> a) or b)
- * a) Admin approves -> PATCH /memberships -> S emit join_approved to User & emit user_joined to everybody else ->
- * On user join_approved client calls socket join_room -> server sends room_state (redis) to user
- * b) Admin denies -> DELETE /memberships -> S emit join_denied to User
- *
- *
- * Flow II:
- *
- *
- */
-
 import { Role } from "./routes";
 
 /**
- * DB Tables: Users, Rooms, Memberships, Messages, Boards, BoardStates
- * What needs broadcast?
+ * Event flows:
  *
- * - Room updates (slug / active boardstate)
- * - Memberships (who joins / exits and changed roles)
- * - Messages (new message / typing)
- * - Board / Board States
+ * 1. User joining a room:
+ *
+ * User clicks join button => POST /memberships with pending => Server emits join_request to Admins & Mods, and join_pending to the user => a) or b)
+ * a) Mods approves req => PATCH /memberships with role => Server emits join_approved to user, and user_joined to everybody in the room =>
+ * On user join_approved, client calls send_room_state event => Server sends back room_state.
+ * b) Mods denies => DELETE /memberships (or PATCH /memberships with banned) => Server emits join_denied to user.
+ * TODO: rate limiting on retries and automatic denied if user banned, and even account suspended/blocked for spam.
+ *
+ * 2. User sends a message:
+ * User types in chat => Client emits typing event true to server => Server broadcast the typing event to the room => a) or b)
+ * a) User doesnt sends the message, stops typing after a set time or deletes its message => Client sends a typing event false to the server => Server broadcasts the event to the room.
+ * b) User sends the message => Client sents a typing event false to server, and POST /messages => Server broadcasts the typing event, and handles the POST request =>
+ * Server emits chat_message event to the room after DB persistence.
+ * TODO: Server should send the last 50 chat messages and store/update them in redis for fast retrival.
+ *
+ * 3. Admin changes room metadata:
+ * Admin changes metadata (eg. slug) => PATCH /rooms => Server updates db and emits room_metadata_change to the room.
+ *
+ * 4. Admin/Mods change users' roles:
+ * Admin/Mods change user's roles => PATCH /memberships => Server updates db and broadcasts room_state to the room.
+ *
+ * 5. Admin/Mods/Editors change board states:
+ * Editors modify board states (eg. add new shape/path, edit text) => Client emits a board_patch event to the Server => The patch data is stored in redis cache and broadcasted in realtime
+ * to the room => After a set time (or if the editor hits save), the updated board state is persisted in db => Server broadcasts the new boardstate to the room.
+ *
  */
 
-// --- Operational / Control ----
+export type Id = number;
+export type MsEpoch = number;
 
-// S broadcast after REST
-export type RoomMetadata = {
-  slug: string;
-  activeBoardStateId: number;
-};
-
-// --- Memberships / Access Control ---
-
-// S To Admins / Mods
-export type JoinRequest = {
-  roomId: number;
-  userId: number;
-  username: string;
-  at: number;
-};
-
-// S To User
-export type JoinPending = {
-  roomId: number;
-  membershipId: number;
-};
-
-// S To User
-export type JoinApproved = {
-  roomId: number;
-};
-
-// S To User
-export type JoinDenied = {
-  roomId: number;
-};
-
-// Broadcast to room on approval
-export type UserJoined = {
-  roomId: number;
-  userId: number;
-  username: string;
-  joinedAt: number;
-};
-
-// On disconnect or membership delete
-export type UserLeft = {
-  roomId: number;
-  userId: number;
+export type UserRef = {
+  userId: Id;
   username: string;
 };
 
-// ───── Joining & state ─────
+// 1 --- Operational
 
-// Client → Server
-export type JoinRoom = {
-  roomId: number;
+export type RoomMetaDataChange = {
+  roomId: Id;
+  slug?: string;
+  activeBoardStateId?: Id;
+  at: MsEpoch;
 };
 
-export type UserData = {
-  userId: number;
+export type RoomMember = {
+  userId: Id;
   username: string;
-  role: Role; // promotion/demotion/removal
+  role: Role;
 };
 
-// Server → Client (hydrate just-joined client)
-export type RoomState = {
-  roomId: number;
-  members: UserData[];
-  cursors: CursorMove[];
-  //TODO: Extend with: recentMessages, boardMeta, etc.
-};
-
-// ───── Ephemeral realtime ─────
-
-//TODO: 30fps max from client (throttle on client; rate-limit on server)
 export type CursorMove = {
-  roomId: number;
-  userId: number;
+  roomId: Id;
   x: number;
   y: number;
-  ts: number;
+  at: MsEpoch;
 };
 
-// --- Chat / Communication ---
+export type RoomState = {
+  roomId: Id;
+  metadata: RoomMetaDataChange;
+  members: RoomMember[];
+  cursors: CursorMove[];
+};
 
-// S to broadcast
+// 2 --- Membership / Access Control
+
+export type JoinRequest = {
+  roomId: Id;
+  username: string;
+  at: MsEpoch;
+};
+
+export type JoinPending = {
+  roomId: Id;
+  membershipId: Id;
+  at: MsEpoch;
+};
+
+export type JoinApproved = {
+  roomId: Id;
+  at: MsEpoch;
+};
+
+export type JoinDenied = {
+  roomId: Id;
+  reason?: string;
+  at: MsEpoch;
+};
+
+export type UserJoined = {
+  roomId: Id;
+  username: string;
+  at: MsEpoch;
+};
+
+export type UserLeft = {
+  roomId: Id;
+  username: string;
+  at: MsEpoch;
+};
+
+export type SendRoomState = {
+  roomId: Id;
+};
+
+// 3 --- Chat / Communication
+
 export type ChatMessage = {
-  userId: number;
+  id: Id;
+  roomId: Id;
+  userId: Id;
   username: string;
-  message: string;
-  createdAt: number;
+  test: string;
+  at: MsEpoch;
 };
 
-// C -> S -> Broadcast
 export type Typing = {
-  userId: number;
-  username: string;
+  roomId: Id;
+  isTyping: boolean;
+  at: MsEpoch;
 };
 
-// --- Board Collab ---
+// 4 --- Board Collab (dif bassed, realtime)
 
-// C -> S
-export type BoardUpdates = {
-  payload: string; //partil dif updates
+export type BoardPatch = {
+  roomId: Id;
+  boardId: Id;
+
+  patch: {
+    path: unknown;
+    value: unknown;
+  };
+
+  at: MsEpoch;
 };
 
-// ───── Socket.IO typings ─────
+// Socket.IO
+
+export type SocketEvent<T> = (payload: T) => void;
 
 export type ClientToServerEvents = {
-  join_room: (payload: JoinRoom, ack?: (ok: true) => void) => void;
-  cursor_move: (payload: CursorMove) => void;
+  join_room: SocketEvent<SendRoomState>;
+  typing: SocketEvent<Typing>;
+  cursor_move: SocketEvent<CursorMove>;
+  board_patch: SocketEvent<BoardPatch>;
 };
 
 export type ServerToClientEvents = {
-  // New user joins room lifecycle
-  join_request: (payload: JoinRequest) => void; // to mods
-  join_pending: (payload: JoinPending) => void; // to requester
-  join_approved: (payload: JoinApproved) => void; // to requester
-  join_denied: (payload: JoinDenied) => void; // to requester
-
-  // Presence
-  user_joined: (payload: UserJoined) => void; // to room
-  room_state: (payload: RoomState) => void; // to the joiner
-
-  // Ephemerals
-  cursor_move: (payload: CursorMove) => void;
+  room_metadata_change: SocketEvent<RoomMetaDataChange>;
+  join_request: SocketEvent<JoinRequest>;
+  join_pending: SocketEvent<JoinPending>;
+  join_approved: SocketEvent<JoinApproved>;
+  join_denied: SocketEvent<JoinDenied>;
+  user_joined: SocketEvent<UserJoined>;
+  user_left: SocketEvent<UserLeft>;
+  chat_message: SocketEvent<ChatMessage>;
+  typing: SocketEvent<Typing>;
+  room_state: SocketEvent<RoomState>;
+  board_patch: SocketEvent<BoardPatch>;
+  cursor_move: SocketEvent<CursorMove>;
 };
