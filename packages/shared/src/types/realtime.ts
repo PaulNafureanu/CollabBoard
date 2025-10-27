@@ -7,7 +7,7 @@ import { Role } from "./routes";
  *
  * User clicks join button => POST /memberships with pending => Server emits join_request to Admins & Mods, and join_pending to the user => a) or b)
  * a) Mods approves req => PATCH /memberships with role => Server emits join_approved to user, and user_joined to everybody in the room =>
- * On user join_approved, client calls send_room_state event => Server sends back room_state.
+ * On user join_approved, client calls join_room event => Server sends back room_state.
  * b) Mods denies => DELETE /memberships (or PATCH /memberships with banned) => Server emits join_denied to user.
  * TODO: rate limiting on retries and automatic denied if user banned, and even account suspended/blocked for spam.
  *
@@ -30,7 +30,7 @@ import { Role } from "./routes";
  *
  */
 
-export type Id = number;
+type Id = number;
 export type MsEpoch = number;
 
 export type UserRef = {
@@ -42,9 +42,8 @@ export type UserRef = {
 
 export type RoomMetadataChange = {
   roomId: Id;
-  slug?: string;
-  activeBoardStateId?: Id;
-  at: MsEpoch;
+  userId: Id;
+  slug: string;
 };
 
 export type RoomMember = {
@@ -55,10 +54,13 @@ export type RoomMember = {
 
 export type CursorMove = {
   roomId: Id;
+  userId: Id;
   x: number;
   y: number;
   at: MsEpoch;
 };
+
+//TODO: fix the metadata issue and make a separated membership state
 
 export type RoomState = {
   roomId: Id;
@@ -71,40 +73,46 @@ export type RoomState = {
 
 export type JoinRequest = {
   roomId: Id;
+  userId: Id;
   username: string;
   at: MsEpoch;
 };
 
 export type JoinPending = {
   roomId: Id;
+  userId: Id;
   membershipId: Id;
   at: MsEpoch;
 };
 
 export type JoinApproved = {
   roomId: Id;
+  userId: Id;
   at: MsEpoch;
 };
 
 export type JoinDenied = {
   roomId: Id;
+  userId: Id;
   reason?: string;
   at: MsEpoch;
 };
 
 export type UserJoined = {
   roomId: Id;
+  userId: Id;
   username: string;
   at: MsEpoch;
 };
 
 export type UserLeft = {
   roomId: Id;
+  userId: Id;
   username: string;
   at: MsEpoch;
 };
 
-export type SendRoomState = {
+export type JoinRoom = {
   roomId: Id;
 };
 
@@ -144,7 +152,7 @@ export type BoardPatch = {
 export type SocketEvent<T> = (payload: T) => void;
 
 export type ClientToServerEvents = {
-  join_room: SocketEvent<SendRoomState>;
+  join_room: SocketEvent<JoinRoom>;
   typing: SocketEvent<Typing>;
   cursor_move: SocketEvent<CursorMove>;
   board_patch: SocketEvent<BoardPatch>;
