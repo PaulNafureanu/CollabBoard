@@ -40,7 +40,7 @@ export type UserRef = {
 
 // 1 --- Operational
 
-export type RoomMetaDataChange = {
+export type RoomMetadataChange = {
   roomId: Id;
   slug?: string;
   activeBoardStateId?: Id;
@@ -62,7 +62,7 @@ export type CursorMove = {
 
 export type RoomState = {
   roomId: Id;
-  metadata: RoomMetaDataChange;
+  metadata: RoomMetadataChange;
   members: RoomMember[];
   cursors: CursorMove[];
 };
@@ -115,7 +115,7 @@ export type ChatMessage = {
   roomId: Id;
   userId: Id;
   username: string;
-  test: string;
+  text: string;
   at: MsEpoch;
 };
 
@@ -151,7 +151,7 @@ export type ClientToServerEvents = {
 };
 
 export type ServerToClientEvents = {
-  room_metadata_change: SocketEvent<RoomMetaDataChange>;
+  room_metadata_change: SocketEvent<RoomMetadataChange>;
   join_request: SocketEvent<JoinRequest>;
   join_pending: SocketEvent<JoinPending>;
   join_approved: SocketEvent<JoinApproved>;
