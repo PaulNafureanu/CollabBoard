@@ -160,12 +160,15 @@ export const Typing = z.object({
 });
 
 /**
- * Flow III: Admin, mods or editors change the active board state:
+ * Flow III: Admin(s), mods or editors change the active board state:
  * Editors modify board states (eg. add new shape/path, edit text) => Client emits a board_patch event to the Server =>
  * The patch data is stored in redis cache and broadcasted in realtime to the room (via board_patch) =>
  * After a set time (or if the editor click save button), the updated board state is persisted in db =>
  * Server broadcasts the new boardstate to the room via resync_board_state.
  *
+ * Admin(s), mods or editors add/updates room metadata:
+ * Editors update the room metadata (e.g. create/update board / boardstates) => POST or PATCH on /boards or /boardstates =>
+ * Server broadcasts the new room_state after the db operation.
  */
 
 // Server to Client
@@ -174,7 +177,7 @@ export const Typing = z.object({
 export const ReSyncBoardState = BoardState.extend({ roomId: Id, at: MsEpoch });
 
 // Bidirectional
-export const BoardPatch = {
+export const BoardPatch = z.object({
   roomId: Id,
   boardStateId: Id,
 
@@ -184,4 +187,30 @@ export const BoardPatch = {
   },
 
   at: MsEpoch,
-};
+});
+
+/**
+ * Flow V: Admin deletes room metadata:
+ * Admin deletes room metadata (e.g.: room, boards, history of boardstates) => DELETE /endpoint => Server makes the persistent
+ * changes to db => a) or b)
+ *
+ * a) if DELETE /room => server broadcasts room_closed to the room => Client has a notification
+ * b) if DELETE /board or /boardstate => server broadcasts room_state (with the new board / boardstate) to the room
+ *
+ */
+
+// Server to Client
+
+// Broadcast to the room
+export const RoomClosed = z.object({
+  roomId: Id,
+  reason: z.string().optional(),
+  at: MsEpoch,
+});
+
+/**
+ * Flow V: Admin & Mods change users' roles:
+ * Admin/Mods change user's roles => PATCH /memberships => Server updates db and broadcasts room_state to the room.
+ */
+
+// RoomState already implemented
