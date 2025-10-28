@@ -7,8 +7,8 @@ import { Role } from "./routes";
  *
  * User clicks join button => POST /memberships with pending => Server emits join_request to Admins & Mods, and join_pending to the user => a) or b)
  * a) Mods approves req => PATCH /memberships with role => Server emits join_approved to user, and user_joined to everybody in the room =>
- * On user join_approved, client calls join_room event => Server sends back room_state.
- * b) Mods denies => DELETE /memberships (or PATCH /memberships with banned) => Server emits join_denied to user.
+ * On client on join_approved, client calls join_room event => Server sends back room_state.
+ * b) Mods denies => DELETE /memberships (or PATCH /memberships with banned) => Server emits join_denied to user or user_banned.
  * TODO: rate limiting on retries and automatic denied if user banned, and even account suspended/blocked for spam.
  *
  * 2. User sends a message:

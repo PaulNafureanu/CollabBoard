@@ -1,6 +1,12 @@
 Notes for self:
 
 1.:
-  - you changed the db schema (you added 2 more roles and board name field)
-  - this change should reflect in the server req handlers (eg. automatic board naming), in jest tests and public shapes / zod validation.
-  - double check where this change could propagate and fix / modify the code as needed.
+
+- you changed the db schema (you added 2 more roles and board name field)
+- this change should reflect in the server req handlers (eg. automatic board naming), in jest tests and public shapes / zod validation.
+- double check where this change could propagate and fix / modify the code as needed.
+
+  2.:
+
+- you changed the db schema: renamed room'slug to room'name for better clarity without migration.
+- migrate dev and change the http routes, jest tests and zod validators namings
