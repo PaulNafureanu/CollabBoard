@@ -155,6 +155,7 @@ export const ChatMessage = Message.extend({ roomId: Id });
 // Bidirectional
 export const Typing = z.object({
   roomId: Id,
+  userId: Id,
   isTyping: z.boolean(),
   at: MsEpoch,
 });
@@ -181,10 +182,11 @@ export const BoardPatch = z.object({
   roomId: Id,
   boardStateId: Id,
 
-  patch: {
+  //TODO: fix this when you know the shape of the json payload
+  patch: z.object({
     path: z.unknown(),
     value: z.json(),
-  },
+  }),
 
   at: MsEpoch,
 });
