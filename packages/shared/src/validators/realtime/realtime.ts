@@ -8,20 +8,14 @@ export const Id = z.coerce.number().int().positive();
 export const MsEpoch = z.number().int().nonnegative(); //TODO: Prefer server time for 'at' fields
 const PosNumber = z.number().nonnegative();
 const Name = z.string().trim().min(1).max(64);
-const Role = z.enum([
-  "OWNER",
-  "MODERATOR",
-  "EDITOR",
-  "MEMBER",
-  "VIEWER",
-  "PENDING",
-  "BANNED",
-]);
+const Role = z.enum(["OWNER", "MODERATOR", "EDITOR", "MEMBER", "VIEWER"]);
+const Status = z.enum(["PENDING", "APPROVED", "BANNED"]);
 
 const RoomMember = z.object({
   userId: Id,
   username: Name,
   role: Role,
+  status: Status,
   isOnline: z.boolean(), //TODO: ensure that isOnline switches only when the tab closes (not on tab switch)
 });
 
@@ -37,7 +31,7 @@ const Cursor = z.object({
 const Message = z.object({
   id: Id,
   userId: Id,
-  username: Name,
+  author: Name,
   text: z.string().trim().min(1),
   at: MsEpoch,
 });
@@ -46,7 +40,7 @@ const BoardState = z.object({
   id: Id,
   boardId: Id,
   boardName: Name,
-  version: Id,
+  version: PosNumber.int(),
   payload: z.json(),
 });
 
@@ -57,10 +51,11 @@ export const CursorMove = Cursor.extend({ roomId: Id });
 export const RoomState = z.object({
   roomId: Id,
   name: Name,
-  members: z.array(RoomMember),
-  cursors: z.array(Cursor),
-  messages: z.array(Message),
+  members: z.array(RoomMember).max(500),
+  cursors: z.array(Cursor).max(500),
+  messages: z.array(Message).max(100),
   boardState: BoardState,
+  schemaVersion: z.literal(1),
 });
 
 /**
@@ -181,7 +176,7 @@ export const ReSyncBoardState = BoardState.extend({ roomId: Id, at: MsEpoch });
 export const BoardPatch = z.object({
   roomId: Id,
   boardStateId: Id,
-
+  version: PosNumber.int(),
   //TODO: fix this when you know the shape of the json payload
   patch: z.object({
     path: z.unknown(),

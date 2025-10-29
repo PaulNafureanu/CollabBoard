@@ -1,5 +1,5 @@
 export * from "./types/input";
-export * from "./types/realtime";
+export * from "./types/realtime2";
 export * from "./types/routes";
 export * from "./validators/realtime/realtime";
 export * as Boards from "./validators/routes/boards";

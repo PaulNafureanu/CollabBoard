@@ -1,174 +1,68 @@
-import { Role } from "./routes";
+import * as z from "zod";
+import {
+  BoardPatch,
+  ChatMessage,
+  CursorMove,
+  JoinApproved,
+  JoinDenied,
+  JoinPending,
+  JoinRequest,
+  JoinRoom,
+  MsEpoch,
+  ReSyncBoardState,
+  ReSyncRoomState,
+  RoomClosed,
+  RoomState,
+  Typing,
+  UserBanned,
+  UserJoined,
+  UserLeft,
+  UserState,
+} from "../validators/realtime/realtime";
 
-/**
- * Event flows:
- *
- * 1. User joining a room:
- *
- * User clicks join button => POST /memberships with pending => Server emits join_request to Admins & Mods, and join_pending to the user => a) or b)
- * a) Mods approves req => PATCH /memberships with role => Server emits join_approved to user, and user_joined to everybody in the room =>
- * On client on join_approved, client calls join_room event => Server sends back room_state.
- * b) Mods denies => DELETE /memberships (or PATCH /memberships with banned) => Server emits join_denied to user or user_banned.
- * TODO: rate limiting on retries and automatic denied if user banned, and even account suspended/blocked for spam.
- *
- * 2. User sends a message:
- * User types in chat => Client emits typing event true to server => Server broadcast the typing event to the room => a) or b)
- * a) User doesnt sends the message, stops typing after a set time or deletes its message => Client sends a typing event false to the server => Server broadcasts the event to the room.
- * b) User sends the message => Client sents a typing event false to server, and POST /messages => Server broadcasts the typing event, and handles the POST request =>
- * Server emits chat_message event to the room after DB persistence.
- * TODO: Server should send the last 50 chat messages and store/update them in redis for fast retrival.
- *
- * 3. Admin changes room metadata:
- * Admin changes metadata (eg. slug) => PATCH /rooms => Server updates db and emits room_metadata_change to the room.
- *
- * 4. Admin/Mods change users' roles:
- * Admin/Mods change user's roles => PATCH /memberships => Server updates db and broadcasts room_state to the room.
- *
- * 5. Admin/Mods/Editors change board states:
- * Editors modify board states (eg. add new shape/path, edit text) => Client emits a board_patch event to the Server => The patch data is stored in redis cache and broadcasted in realtime
- * to the room => After a set time (or if the editor hits save), the updated board state is persisted in db => Server broadcasts the new boardstate to the room.
- *
- */
-
-type Id = number;
-export type MsEpoch = number;
-
-export type UserRef = {
-  userId: Id;
-  username: string;
-};
-
-// 1 --- Operational
-
-export type RoomMetadataChange = {
-  roomId: Id;
-  userId: Id;
-  slug: string;
-};
-
-export type RoomMember = {
-  userId: Id;
-  username: string;
-  role: Role;
-};
-
-export type CursorMove = {
-  roomId: Id;
-  userId: Id;
-  x: number;
-  y: number;
-  at: MsEpoch;
-};
-
-//TODO: fix the metadata issue and make a separated membership state
-
-export type RoomState = {
-  roomId: Id;
-  metadata: RoomMetadataChange;
-  members: RoomMember[];
-  cursors: CursorMove[];
-};
-
-// 2 --- Membership / Access Control
-
-export type JoinRequest = {
-  roomId: Id;
-  userId: Id;
-  username: string;
-  at: MsEpoch;
-};
-
-export type JoinPending = {
-  roomId: Id;
-  userId: Id;
-  membershipId: Id;
-  at: MsEpoch;
-};
-
-export type JoinApproved = {
-  roomId: Id;
-  userId: Id;
-  at: MsEpoch;
-};
-
-export type JoinDenied = {
-  roomId: Id;
-  userId: Id;
-  reason?: string;
-  at: MsEpoch;
-};
-
-export type UserJoined = {
-  roomId: Id;
-  userId: Id;
-  username: string;
-  at: MsEpoch;
-};
-
-export type UserLeft = {
-  roomId: Id;
-  userId: Id;
-  username: string;
-  at: MsEpoch;
-};
-
-export type JoinRoom = {
-  roomId: Id;
-};
-
-// 3 --- Chat / Communication
-
-export type ChatMessage = {
-  id: Id;
-  roomId: Id;
-  userId: Id;
-  username: string;
-  text: string;
-  at: MsEpoch;
-};
-
-export type Typing = {
-  roomId: Id;
-  isTyping: boolean;
-  at: MsEpoch;
-};
-
-// 4 --- Board Collab (dif bassed, realtime)
-
-export type BoardPatch = {
-  roomId: Id;
-  boardId: Id;
-
-  patch: {
-    path: unknown;
-    value: unknown;
-  };
-
-  at: MsEpoch;
-};
+export type MsEpochType = z.infer<typeof MsEpoch>;
+export type CursorMoveSchema = z.infer<typeof CursorMove>;
+export type RoomStateSchema = z.infer<typeof RoomState>;
+export type JoinRequestSchema = z.infer<typeof JoinRequest>;
+export type JoinPendingSchema = z.infer<typeof JoinPending>;
+export type JoinApprovedSchema = z.infer<typeof JoinApproved>;
+export type UserJoinedSchema = z.infer<typeof UserJoined>;
+export type JoinDeniedSchema = z.infer<typeof JoinDenied>;
+export type UserBannedSchema = z.infer<typeof UserBanned>;
+export type UserLeftSchema = z.infer<typeof UserLeft>;
+export type UserStateSchema = z.infer<typeof UserState>;
+export type JoinRoomSchema = z.infer<typeof JoinRoom>;
+export type ReSyncRoomStateSchema = z.infer<typeof ReSyncRoomState>;
+export type ChatMessageSchema = z.infer<typeof ChatMessage>;
+export type TypingSchema = z.infer<typeof Typing>;
+export type ReSyncBoardStateSchema = z.infer<typeof ReSyncBoardState>;
+export type BoardPatchSchema = z.infer<typeof BoardPatch>;
+export type RoomClosedSchema = z.infer<typeof RoomClosed>;
 
 // Socket.IO
-
 export type SocketEvent<T> = (payload: T) => void;
 
 export type ClientToServerEvents = {
-  join_room: SocketEvent<JoinRoom>;
-  typing: SocketEvent<Typing>;
-  cursor_move: SocketEvent<CursorMove>;
-  board_patch: SocketEvent<BoardPatch>;
+  cursor_move: SocketEvent<CursorMoveSchema>;
+  join_room: SocketEvent<JoinRoomSchema>;
+  resync_room_state: SocketEvent<ReSyncRoomStateSchema>;
+  typing: SocketEvent<TypingSchema>;
+  board_patch: SocketEvent<BoardPatchSchema>;
 };
 
 export type ServerToClientEvents = {
-  room_metadata_change: SocketEvent<RoomMetadataChange>;
-  join_request: SocketEvent<JoinRequest>;
-  join_pending: SocketEvent<JoinPending>;
-  join_approved: SocketEvent<JoinApproved>;
-  join_denied: SocketEvent<JoinDenied>;
-  user_joined: SocketEvent<UserJoined>;
-  user_left: SocketEvent<UserLeft>;
-  chat_message: SocketEvent<ChatMessage>;
-  typing: SocketEvent<Typing>;
-  room_state: SocketEvent<RoomState>;
-  board_patch: SocketEvent<BoardPatch>;
-  cursor_move: SocketEvent<CursorMove>;
+  cursor_move: SocketEvent<CursorMoveSchema>;
+  room_state: SocketEvent<RoomStateSchema>;
+  join_request: SocketEvent<JoinRequestSchema>;
+  join_pending: SocketEvent<JoinPendingSchema>;
+  join_approved: SocketEvent<JoinApprovedSchema>;
+  user_joined: SocketEvent<UserJoinedSchema>;
+  join_denied: SocketEvent<JoinDeniedSchema>;
+  user_banned: SocketEvent<UserBannedSchema>;
+  user_left: SocketEvent<UserLeftSchema>;
+  user_state: SocketEvent<UserStateSchema>;
+  chat_message: SocketEvent<ChatMessageSchema>;
+  resync_board_state: SocketEvent<ReSyncBoardStateSchema>;
+  board_patch: SocketEvent<BoardPatchSchema>;
+  room_closed: SocketEvent<RoomClosedSchema>;
 };
