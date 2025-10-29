@@ -1,7 +1,7 @@
 import * as z from "zod";
 import Common from "./common";
 
-const Username = z.string().trim().min(1).max(64);
+const Username = Common.Name;
 const Email = z.email().trim().max(255);
 const Password = z.string().min(8).max(255);
 

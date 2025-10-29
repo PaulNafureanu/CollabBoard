@@ -10,3 +10,5 @@ Notes for self:
 
 - you changed the db schema: renamed room'slug to room'name for better clarity without migration.
 - migrate dev and change the http routes, jest tests and zod validators namings
+
+What should it be for a max text message size in chars for zod validator for a chat app?

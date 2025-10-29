@@ -8,14 +8,18 @@ export type PageData<T extends Object> = {
   hasPrev: boolean;
 };
 
+export enum Status {
+  PENDING,
+  APPROVED,
+  BANNED,
+}
+
 export enum Role {
   OWNER,
   MODERATOR,
   EDITOR,
   MEMBER,
   VIEWER,
-  PENDING,
-  BANNED,
 }
 
 export type PublicUser = {
@@ -28,26 +32,10 @@ export type PublicUser = {
 
 export type PublicRoom = {
   id: number;
-  slug: string;
+  name: string;
   createdAt: string;
   updatedAt: string;
   activeBoardStateId: number;
-};
-
-export type PublicBoardState = {
-  id: number;
-  boardId: number;
-  version: number;
-  payload: string;
-  createdAt: string;
-};
-
-export type PublicBoard = {
-  id: number;
-  roomId: number;
-  createdAt: string;
-  updatedAt: string;
-  lastState: number;
 };
 
 export type PublicMembership = {
@@ -55,7 +43,9 @@ export type PublicMembership = {
   userId: number;
   roomId: number;
   role: Role;
+  status: Status;
   joinedAt: string;
+  updatedAt: string;
 };
 
 export type PublicMessage = {
@@ -64,6 +54,23 @@ export type PublicMessage = {
   userId: number;
   author: string;
   text: string;
+  createdAt: string;
+};
+
+export type PublicBoard = {
+  id: number;
+  roomId: number;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+  lastState: number;
+};
+
+export type PublicBoardState = {
+  id: number;
+  boardId: number;
+  version: number;
+  payload: string;
   createdAt: string;
 };
 

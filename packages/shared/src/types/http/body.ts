@@ -7,7 +7,7 @@ import {
   Memberships,
   Messages,
   Common,
-} from "./../index";
+} from "../../index";
 
 export type CreateUserBody = z.infer<typeof Users.default.CreateBody>;
 export type UpdateUserBody = z.infer<typeof Users.default.UpdateBody>;

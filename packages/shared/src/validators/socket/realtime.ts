@@ -32,7 +32,7 @@ const Message = z.object({
   id: Id,
   userId: Id,
   author: Name,
-  text: z.string().trim().min(1),
+  text: z.string().trim().min(1).max(4096),
   at: MsEpoch,
 });
 

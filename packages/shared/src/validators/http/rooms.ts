@@ -1,14 +1,14 @@
 import * as z from "zod";
 import Common from "./common";
 
-const Slug = z.string().trim().min(1).max(64).optional();
+const Name = Common.Name.optional();
 const ActiveBoardStateId = Common.Id;
 
-const CreateBody = z.object({ slug: Slug.optional() }).strict();
+const CreateBody = z.object({ name: Name.optional() }).strict();
 
 const UpdateBody = z
   .object({
-    slug: Slug.optional(),
+    name: Name.optional(),
     activeBoardStateId: ActiveBoardStateId.optional(),
   })
   .strict()

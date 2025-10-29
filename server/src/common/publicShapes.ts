@@ -38,26 +38,10 @@ export const PublicUser = {
 
 export const PublicRoom = {
   id: true,
-  slug: true,
+  name: true,
   createdAt: true,
   updatedAt: true,
   activeBoardStateId: true,
-};
-
-export const PublicBoardState = {
-  id: true,
-  boardId: true,
-  version: true,
-  payload: true,
-  createdAt: true,
-};
-
-export const PublicBoard = {
-  id: true,
-  roomId: true,
-  createdAt: true,
-  updatedAt: true,
-  lastState: true,
 };
 
 export const PublicMembership = {
@@ -65,7 +49,9 @@ export const PublicMembership = {
   userId: true,
   roomId: true,
   role: true,
+  status: true,
   joinedAt: true,
+  updatedAt: true,
 };
 
 export const PublicMessage = {
@@ -74,6 +60,23 @@ export const PublicMessage = {
   userId: true,
   author: true,
   text: true,
+  createdAt: true,
+};
+
+export const PublicBoard = {
+  id: true,
+  roomId: true,
+  name: true,
+  createdAt: true,
+  updatedAt: true,
+  lastState: true,
+};
+
+export const PublicBoardState = {
+  id: true,
+  boardId: true,
+  version: true,
+  payload: true,
   createdAt: true,
 };
 
