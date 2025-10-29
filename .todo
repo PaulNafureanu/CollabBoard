@@ -1,14 +1,51 @@
-Notes for self:
+✅ Definition of Done — Current Phase
 
-1.:
+1. Shared Contracts
 
-- you changed the db schema (you added 2 more roles and board name field)
-- this change should reflect in the server req handlers (eg. automatic board naming), in jest tests and public shapes / zod validation.
-- double check where this change could propagate and fix / modify the code as needed.
+All socket validators exist and compile
 
-  2.:
+All socket types are inferred from validators with no TS errors
 
-- you changed the db schema: renamed room'slug to room'name for better clarity without migration.
-- migrate dev and change the http routes, jest tests and zod validators namings
+No C→S event trusts client identity (server overwrites userId)
 
-What should it be for a max text message size in chars for zod validator for a chat app?
+2. Client Side
+
+http/ API modules exist for all tables (users, rooms, boards, messages, memberships)
+
+realtime/ socket module can:
+
+connect/disconnect explicitly
+
+set auth before connect
+
+register/unregister listeners cleanly (returns cleanup fn)
+
+emit functions exist for all C→S events (join_room, cursor_move, typing, board_patch…)
+
+3. Server Side (REST)
+
+All Prisma-based routers compile and return correct shapes
+
+Membership flows reflect new Status and Role logic
+
+POST/PATCH/DELETE on rooms/boards/boardstates emit correct socket events after DB
+
+4. Server Side (Socket)
+
+Namespace /rooms initialized
+
+All S→C events wired
+
+All C→S handlers validate using Zod
+
+Unauthorized/pending/banned users are rejected with no leak of room_state
+
+Cursor & typing events do not crash server on bad payloads
+
+5. Redis (not behavior, just readiness)
+
+Redis client connects without errors
+
+Keys & TTL strategy chosen for presence/cursors/messages (even if not implemented yet)
+
+Graceful shutdown closes IO & Redis cleanly

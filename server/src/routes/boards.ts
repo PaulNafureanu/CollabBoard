@@ -54,8 +54,8 @@ boards.get("/:id/boardstates", async (req, res, next) => {
 
 boards.post("/", async (req, res, next) => {
   try {
-    const { roomId } = CreateBody.parse(req.body);
-    const board = await createBoard(roomId);
+    const { roomId, name } = CreateBody.parse(req.body);
+    const board = await createBoard(roomId, name);
     res.status(201).location(`/boards/${board.id}`).json(board);
   } catch (err) {
     next(err);
@@ -98,7 +98,7 @@ boards.patch("/:id", async (req, res, next) => {
 
         // Create a new board
         const newBoard = await tx.board.create({
-          data: { roomId },
+          data: { roomId, name: "" },
           select: PublicBoard,
         });
 
@@ -129,7 +129,7 @@ boards.patch("/:id", async (req, res, next) => {
         // Return the new board with the updated last state version
         return await tx.board.update({
           where: { id: newBoard.id },
-          data: { lastState },
+          data: { lastState, name: `Board${newBoard.id}` },
           select: PublicBoard,
         });
       } else {

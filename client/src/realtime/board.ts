@@ -1,22 +1,24 @@
-import type { BoardPatch } from "@collabboard/shared";
+import type { BoardPatchSchema } from "@collabboard/shared";
 import { getSocket } from "./socket";
+import type z from "zod";
 
 export function emitBoardPatch(
   roomId: number,
-  boardId: number,
+  boardStateId: number,
   path: unknown,
-  value: unknown,
+  value: z.core.util.JSONType,
 ) {
-  const payload: BoardPatch = {
+  const payload: BoardPatchSchema = {
     roomId,
-    boardId,
+    boardStateId,
+    version: 0, // server-only field
     patch: { path, value },
     at: Date.now(),
   };
   getSocket().emit("board_patch", payload);
 }
 
-export function onBoardPatch(handler: (p: BoardPatch) => void) {
+export function onBoardPatch(handler: (p: BoardPatchSchema) => void) {
   const socket = getSocket();
   socket.on("board_patch", handler);
   return () => socket.off("board_patch", handler);

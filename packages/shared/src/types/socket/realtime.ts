@@ -63,6 +63,7 @@ export type ServerToClientEvents = {
   user_state: SocketEvent<UserStateSchema>;
   chat_message: SocketEvent<ChatMessageSchema>;
   resync_board_state: SocketEvent<ReSyncBoardStateSchema>;
+  typing: SocketEvent<TypingSchema>;
   board_patch: SocketEvent<BoardPatchSchema>;
   room_closed: SocketEvent<RoomClosedSchema>;
 };

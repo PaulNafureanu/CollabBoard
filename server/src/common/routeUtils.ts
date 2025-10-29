@@ -41,11 +41,12 @@ export const createBoardState = async (
 
 export const createBoard = async (
   roomId: number,
+  name?: string,
   tx?: Prisma.TransactionClient,
 ) => {
   return await inTx(tx, async (db) => {
     const board = await db.board.create({
-      data: { roomId },
+      data: { roomId, name: "" },
       select: PublicBoard,
     });
 
@@ -59,7 +60,7 @@ export const createBoard = async (
 
     return await db.board.update({
       where: { id: board.id },
-      data: { lastState: state.id },
+      data: { lastState: state.id, name: name ?? `Board${board.id}` },
       select: PublicBoard,
     });
   });
@@ -100,7 +101,7 @@ export const getActivatedRoom = async (
       const countBoards = await db.board.count({
         where: { roomId },
       });
-      if (countBoards === 1) await createBoard(roomId, db);
+      if (countBoards === 1) await createBoard(roomId, undefined, db);
       else if (countBoards > 1)
         await activatePreBoardState(roomId, boardId, db);
     }

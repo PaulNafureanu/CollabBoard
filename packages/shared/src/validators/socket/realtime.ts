@@ -176,7 +176,7 @@ export const ReSyncBoardState = BoardState.extend({ roomId: Id, at: MsEpoch });
 export const BoardPatch = z.object({
   roomId: Id,
   boardStateId: Id,
-  version: PosNumber.int(),
+  version: PosNumber.int(), // server-only field
   //TODO: fix this when you know the shape of the json payload
   patch: z.object({
     path: z.unknown(),

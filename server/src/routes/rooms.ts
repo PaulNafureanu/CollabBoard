@@ -97,28 +97,31 @@ rooms.get("/:id/boards", async (req, res, next) => {
 // Add/Modify/remove resources in DB
 rooms.post("/", async (req, res, next) => {
   try {
-    const { slug } = CreateBody.parse(req.body);
+    const { name } = CreateBody.parse(req.body);
 
     const room = await prisma.$transaction(async (tx) => {
       let roomTx;
 
-      if (slug !== undefined) {
+      if (name !== undefined) {
         roomTx = await tx.room.create({
-          data: { slug },
+          data: { name },
           select: PublicRoom,
         });
       } else {
-        const base = await tx.room.create({ data: {}, select: { id: true } });
+        const base = await tx.room.create({
+          data: { name: "" },
+          select: { id: true },
+        });
 
         roomTx = await tx.room.update({
           where: { id: base.id },
-          data: { slug: `Room${base.id}` },
+          data: { name: `Room${base.id}` },
           select: PublicRoom,
         });
       }
 
       // Create board & boardstate and switch the new state as active for this new room
-      await createBoard(roomTx.id, tx);
+      await createBoard(roomTx.id, undefined, tx);
       // referesh to return the updated room with the active field
       return await tx.room.findUniqueOrThrow({
         where: { id: roomTx.id },
@@ -134,9 +137,9 @@ rooms.post("/", async (req, res, next) => {
 rooms.patch("/:id", async (req, res, next) => {
   try {
     const { id } = IdParam.parse(req.params);
-    const { slug, activeBoardStateId } = UpdateBody.parse(req.body);
+    const { name, activeBoardStateId } = UpdateBody.parse(req.body);
     const data: any = {};
-    if (slug !== undefined) data.slug = slug;
+    if (name !== undefined) data.name = name;
     if (activeBoardStateId !== undefined)
       data.activeBoardStateId = activeBoardStateId;
 
