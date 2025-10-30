@@ -13,17 +13,25 @@ export const registerEvents = (
   redis: Redis,
 ) => {
   socket.on("join_room", async (raw) => {
-    const p = JoinRoom.safeParse(raw);
-    if (p.error) return;
-    const roomId = p.data.roomId;
     const userId = socket.data.user.id;
+    try {
+      const p = JoinRoom.safeParse(raw);
+      if (!p.success) return; // or socket emit "error"
+      const roomId = p.data.roomId;
 
-    // const membership = await prisma.membership.findUnique({
-    //   where: { userId, roomId },
-    //   select: { status: true, role: true },
-    // });
+      const membership = await prisma.membership.findUnique({
+        where: { userId_roomId: { userId, roomId } },
+        select: { status: true, role: true },
+      });
 
-    // prisma
+      if (membership?.status === "APPROVED" && membership.role) {
+        //TODO: emit room state to the requester
+      } else {
+        //TODO: emit error to the requester
+      }
+    } catch (err) {
+      //TODO: emit error to the requester
+    }
 
     // Check if the user is approved with role to be in that room, if so, sent the roomstate to it
   });
