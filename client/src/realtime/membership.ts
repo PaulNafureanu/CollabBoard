@@ -3,6 +3,7 @@ import type {
   JoinDeniedSchema,
   JoinPendingSchema,
   JoinRequestSchema,
+  UserBannedSchema,
   UserJoinedSchema,
   UserLeftSchema,
 } from "@collabboard/shared";
@@ -36,6 +37,12 @@ export function onJoinDenied(handler: (p: JoinDeniedSchema) => void) {
   const socket = getSocket();
   socket.on("join_denied", handler);
   return () => socket.off("join_denied", handler);
+}
+
+export function onUserBanned(handler: (p: UserBannedSchema) => void) {
+  const socket = getSocket();
+  socket.on("user_banned", handler);
+  return () => socket.off("user_banned", handler);
 }
 
 export function onUserLeft(handler: (p: UserLeftSchema) => void) {
