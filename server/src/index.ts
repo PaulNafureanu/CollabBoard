@@ -1,13 +1,19 @@
-import "dotenv/config";
 import cors from "cors";
+import "dotenv/config";
 import express from "express";
 import http from "http";
 import Redis from "ioredis";
 import { Server as IOServer } from "socket.io";
 
+import type {
+  ClientToServerEvents,
+  ServerToClientEvents,
+} from "@collabboard/shared";
 import helmet from "helmet";
 import { errorHandler, jsonParseGuard } from "./middleware/errors";
 import { wireRealtime } from "./realtime";
+import { setIO } from "./realtime/io";
+import type { ServerSideEvents, SocketDataSchema } from "./realtime/types";
 import { boards } from "./routes/boards";
 import { boardStates } from "./routes/boardStates";
 import { health } from "./routes/health";
@@ -18,7 +24,6 @@ import { rooms } from "./routes/rooms";
 import { users } from "./routes/users";
 import { version } from "./routes/version";
 import { strToArray } from "./utils/stringUtils";
-import { setIO } from "./realtime/io";
 
 const app = express();
 
@@ -52,7 +57,12 @@ const clientOrigins = strToArray(
   process.env.CLIENT_ORIGIN ?? "http://localhost:5173",
 );
 
-const io = new IOServer(server, {
+const io = new IOServer<
+  ClientToServerEvents,
+  ServerToClientEvents,
+  ServerSideEvents,
+  SocketDataSchema
+>(server, {
   path: "/socket.io",
   cors: {
     origin: clientOrigins,

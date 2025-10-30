@@ -47,18 +47,20 @@ const BoardState = z.object({
 });
 
 // Broadcast to the room
-export const CursorMove = Cursor.extend({ roomId: Id });
+export const CursorMove = Cursor.extend({ roomId: Id }).strict();
 
 // Sent to the requester
-export const RoomState = z.object({
-  roomId: Id,
-  name: Name,
-  members: z.array(RoomMember).max(500),
-  cursors: z.array(Cursor).max(500),
-  messages: z.array(Message).max(100),
-  boardState: BoardState,
-  schemaVersion: z.literal(1),
-});
+export const RoomState = z
+  .object({
+    roomId: Id,
+    name: Name,
+    members: z.array(RoomMember).max(500),
+    cursors: z.array(Cursor).max(500),
+    messages: z.array(Message).max(100),
+    boardState: BoardState,
+    schemaVersion: z.literal(1),
+  })
+  .strict();
 
 /**
  * Flow I: User joining and leaving a room:
@@ -78,59 +80,73 @@ export const RoomState = z.object({
 // Server to Client
 
 // Sent to admins & mods
-export const JoinRequest = z.object({
-  roomId: Id,
-  userId: Id,
-  username: Name,
-  membershipId: Id,
-  at: MsEpoch,
-});
+export const JoinRequest = z
+  .object({
+    roomId: Id,
+    userId: Id,
+    username: Name,
+    membershipId: Id,
+    at: MsEpoch,
+  })
+  .strict();
 
 // Sent to the requester
-export const JoinPending = z.object({
-  roomId: Id,
-  at: MsEpoch,
-});
+export const JoinPending = z
+  .object({
+    roomId: Id,
+    at: MsEpoch,
+  })
+  .strict();
 
 // Sent to the requester
-export const JoinApproved = z.object({
-  roomId: Id,
-  at: MsEpoch,
-});
+export const JoinApproved = z
+  .object({
+    roomId: Id,
+    at: MsEpoch,
+  })
+  .strict();
 
 // Broadcast to the room
-export const UserJoined = ExtendedRoomMember;
+export const UserJoined = ExtendedRoomMember.strict();
 
 // Sent to the requester
-export const JoinDenied = z.object({
-  roomId: Id,
-  reason: z.string().optional(),
-  at: MsEpoch,
-});
+export const JoinDenied = z
+  .object({
+    roomId: Id,
+    reason: z.string().optional(),
+    at: MsEpoch,
+  })
+  .strict();
 
 // Sent to the requester
-export const UserBanned = z.object({
-  roomId: Id,
-  reason: z.string().optional(),
-  at: MsEpoch,
-});
+export const UserBanned = z
+  .object({
+    roomId: Id,
+    reason: z.string().optional(),
+    at: MsEpoch,
+  })
+  .strict();
 
 // Broadcast to the room
-export const UserLeft = ExtendedRoomMember;
+export const UserLeft = ExtendedRoomMember.strict();
 
 // Broadcast to the room when the online/offline state changes for an user
-export const UserState = ExtendedRoomMember;
+export const UserState = ExtendedRoomMember.strict();
 
 // Client to Server
 
 //TODO: Make sure the server rejects the event if: membership still pending or banned (To not expose room state).
-export const JoinRoom = z.object({
-  roomId: Id,
-});
+export const JoinRoom = z
+  .object({
+    roomId: Id,
+  })
+  .strict();
 
-export const ReSyncRoomState = z.object({
-  roomId: Id,
-});
+export const ReSyncRoomState = z
+  .object({
+    roomId: Id,
+  })
+  .strict();
 
 /**
  * Flow II: User sends a message:
@@ -147,15 +163,17 @@ export const ReSyncRoomState = z.object({
 // Server to client
 
 // Broadcasts to the room
-export const ChatMessage = Message.extend({ roomId: Id });
+export const ChatMessage = Message.extend({ roomId: Id }).strict();
 
 // Bidirectional
-export const Typing = z.object({
-  roomId: Id,
-  userId: Id,
-  isTyping: z.boolean(),
-  at: MsEpoch,
-});
+export const Typing = z
+  .object({
+    roomId: Id,
+    userId: Id,
+    isTyping: z.boolean(),
+    at: MsEpoch,
+  })
+  .strict();
 
 /**
  * Flow III: Admin(s), mods or editors change the active board state:
@@ -172,21 +190,26 @@ export const Typing = z.object({
 // Server to Client
 
 // Broadcasts to the room
-export const ReSyncBoardState = BoardState.extend({ roomId: Id, at: MsEpoch });
+export const ReSyncBoardState = BoardState.extend({
+  roomId: Id,
+  at: MsEpoch,
+}).strict();
 
 // Bidirectional
-export const BoardPatch = z.object({
-  roomId: Id,
-  boardStateId: Id,
-  baseVersion: PosNumber.int(),
-  //TODO: fix this when you know the shape of the json payload
-  patch: z.object({
-    path: JsonPathSchema,
-    value: JsonSchema,
-  }),
+export const BoardPatch = z
+  .object({
+    roomId: Id,
+    boardStateId: Id,
+    baseVersion: PosNumber.int(),
+    //TODO: fix this when you know the shape of the json payload
+    patch: z.object({
+      path: JsonPathSchema,
+      value: JsonSchema,
+    }),
 
-  at: MsEpoch,
-});
+    at: MsEpoch,
+  })
+  .strict();
 
 /**
  * Flow V: Admin deletes room metadata:
@@ -201,11 +224,13 @@ export const BoardPatch = z.object({
 // Server to Client
 
 // Broadcast to the room
-export const RoomClosed = z.object({
-  roomId: Id,
-  reason: z.string().optional(),
-  at: MsEpoch,
-});
+export const RoomClosed = z
+  .object({
+    roomId: Id,
+    reason: z.string().optional(),
+    at: MsEpoch,
+  })
+  .strict();
 
 /**
  * Flow V: Admin & Mods change users' roles:

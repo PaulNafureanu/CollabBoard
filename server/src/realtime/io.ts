@@ -1,8 +1,8 @@
-import type { Server } from "socket.io";
+import type { ServerType } from "./types";
 
-let ioRef: Server | null;
+let ioRef: ServerType | null;
 
-export const setIO = (s: Server) => {
+export const setIO = (s: ServerType) => {
   ioRef = s;
 };
 

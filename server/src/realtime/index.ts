@@ -1,8 +1,8 @@
 import type Redis from "ioredis";
-import type { Server } from "socket.io";
 import { wireRooms } from "./rooms";
+import type { ServerType } from "./types";
 
-export const wireRealtime = (io: Server, redis: Redis) => {
+export const wireRealtime = (io: ServerType, redis: Redis) => {
   const nsp = io.of("/rooms");
   wireRooms(nsp, redis);
 };
