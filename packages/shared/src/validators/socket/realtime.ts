@@ -1,4 +1,5 @@
 import * as z from "zod";
+import { JsonPathSchema, JsonSchema } from "../../common/json";
 
 /**
  * General validators
@@ -41,7 +42,8 @@ const BoardState = z.object({
   boardId: Id,
   boardName: Name,
   version: PosNumber.int(),
-  payload: z.json(),
+  baseVersion: PosNumber.int(),
+  payload: JsonSchema,
 });
 
 // Broadcast to the room
@@ -176,11 +178,11 @@ export const ReSyncBoardState = BoardState.extend({ roomId: Id, at: MsEpoch });
 export const BoardPatch = z.object({
   roomId: Id,
   boardStateId: Id,
-  version: PosNumber.int(), // server-only field
+  baseVersion: PosNumber.int(),
   //TODO: fix this when you know the shape of the json payload
   patch: z.object({
-    path: z.unknown(),
-    value: z.json(),
+    path: JsonPathSchema,
+    value: JsonSchema,
   }),
 
   at: MsEpoch,

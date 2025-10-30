@@ -1,20 +1,22 @@
 import type {
   BoardPatchSchema,
+  JsonPathType,
+  JsonType,
   ReSyncBoardStateSchema,
 } from "@collabboard/shared";
 import { getSocket } from "./socket";
-import type z from "zod";
 
 export function emitBoardPatch(
   roomId: number,
   boardStateId: number,
-  path: unknown,
-  value: z.core.util.JSONType,
+  baseVersion: number,
+  path: JsonPathType,
+  value: JsonType,
 ) {
   const payload: BoardPatchSchema = {
     roomId,
     boardStateId,
-    version: 0, // server-only field
+    baseVersion,
     patch: { path, value },
     at: Date.now(),
   };
