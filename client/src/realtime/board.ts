@@ -1,8 +1,8 @@
 import type {
-  BoardPatchSchema,
+  BoardPatchType,
   JsonPathType,
   JsonType,
-  ReSyncBoardStateSchema,
+  ReSyncBoardStateType,
 } from "@collabboard/shared";
 import { getSocket } from "./socket";
 
@@ -13,7 +13,7 @@ export function emitBoardPatch(
   path: JsonPathType,
   value: JsonType,
 ) {
-  const payload: BoardPatchSchema = {
+  const payload: BoardPatchType = {
     roomId,
     boardStateId,
     baseVersion,
@@ -23,15 +23,13 @@ export function emitBoardPatch(
   getSocket().emit("board_patch", payload);
 }
 
-export function onBoardPatch(handler: (p: BoardPatchSchema) => void) {
+export function onBoardPatch(handler: (p: BoardPatchType) => void) {
   const socket = getSocket();
   socket.on("board_patch", handler);
   return () => socket.off("board_patch", handler);
 }
 
-export function onReSyncBoardState(
-  handler: (p: ReSyncBoardStateSchema) => void,
-) {
+export function onReSyncBoardState(handler: (p: ReSyncBoardStateType) => void) {
   const socket = getSocket();
   socket.on("resync_board_state", handler);
   return () => socket.off("resync_board_state", handler);

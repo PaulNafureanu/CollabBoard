@@ -24,6 +24,7 @@ import { rooms } from "./routes/rooms";
 import { users } from "./routes/users";
 import { version } from "./routes/version";
 import { strToArray } from "./utils/stringUtils";
+import { createAdapter } from "@socket.io/redis-adapter";
 
 const app = express();
 
@@ -73,13 +74,24 @@ const io = new IOServer<
 
 setIO(io);
 
-const redis = new Redis(process.env.REDIS_URL ?? "redis://localhost:6379");
+const redisURL = process.env.REDIS_URL ?? "redis://localhost:6379";
 
-// Basic Redis connection logging
-redis.on("connect", () => console.log("[redis] connected"));
-redis.on("error", (err) => console.error("[redis] error:", err.message));
+const redisData = new Redis(redisURL);
+const pub = new Redis(redisURL);
+const sub = new Redis(redisURL);
 
-wireRealtime(io, redis);
+pub.on("connect", () => console.log("[redis:pub] connected"));
+sub.on("connect", () => console.log("[redis:sub] connected"));
+redisData.on("connect", () => console.log("[redis:data] connected"));
+
+pub.on("error", (err) => console.error("[redis:pub] error: ", err.message));
+sub.on("error", (err) => console.error("[redis:sub] error: ", err.message));
+redisData.on("error", (err) =>
+  console.error("[redis:data] error: ", err.message),
+);
+
+io.adapter(createAdapter(pub, sub));
+wireRealtime(io, redisData);
 
 const PORT = Number(process.env.PORT ?? 3000);
 server.listen(PORT, () => {
@@ -92,8 +104,10 @@ process.on("SIGTERM", shutdown);
 async function shutdown() {
   console.log("Shutting down...");
   io.close(); // stop accepting new sockets, close existing
-  await redis.quit().catch(() => redis.disconnect());
+
+  await Promise.allSettled([pub.quit(), sub.quit(), redisData.quit()]);
   server.close(() => process.exit(0));
+
   // safety timer
   setTimeout(() => process.exit(0), 5000).unref();
 }

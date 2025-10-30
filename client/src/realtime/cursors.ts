@@ -1,14 +1,14 @@
-import type { CursorMoveSchema } from "@collabboard/shared";
+import type { CursorMoveType } from "@collabboard/shared";
 import { getSocket } from "./socket";
 
-export function onCursorMove(handler: (p: CursorMoveSchema) => void) {
+export function onCursorMove(handler: (p: CursorMoveType) => void) {
   const socket = getSocket();
   socket.on("cursor_move", handler);
   return () => socket.off("cursor_move", handler);
 }
 
 let rafId: number | null = null;
-let lastPayload: Omit<CursorMoveSchema, "at"> | null = null;
+let lastPayload: Omit<CursorMoveType, "at"> | null = null;
 
 export function emitCursorMove(
   roomId: number,

@@ -21,49 +21,49 @@ import {
 } from "./../../validators/socket/realtime";
 
 export type MsEpochType = z.infer<typeof MsEpoch>;
-export type CursorMoveSchema = z.infer<typeof CursorMove>;
-export type RoomStateSchema = z.infer<typeof RoomState>;
-export type JoinRequestSchema = z.infer<typeof JoinRequest>;
-export type JoinPendingSchema = z.infer<typeof JoinPending>;
-export type JoinApprovedSchema = z.infer<typeof JoinApproved>;
-export type UserJoinedSchema = z.infer<typeof UserJoined>;
-export type JoinDeniedSchema = z.infer<typeof JoinDenied>;
-export type UserBannedSchema = z.infer<typeof UserBanned>;
-export type UserLeftSchema = z.infer<typeof UserLeft>;
-export type UserStateSchema = z.infer<typeof UserState>;
-export type JoinRoomSchema = z.infer<typeof JoinRoom>;
-export type ReSyncRoomStateSchema = z.infer<typeof ReSyncRoomState>;
-export type ChatMessageSchema = z.infer<typeof ChatMessage>;
-export type TypingSchema = z.infer<typeof Typing>;
-export type ReSyncBoardStateSchema = z.infer<typeof ReSyncBoardState>;
-export type BoardPatchSchema = z.infer<typeof BoardPatch>;
-export type RoomClosedSchema = z.infer<typeof RoomClosed>;
+export type CursorMoveType = z.infer<typeof CursorMove>;
+export type RoomStateType = z.infer<typeof RoomState>;
+export type JoinRequestType = z.infer<typeof JoinRequest>;
+export type JoinPendingType = z.infer<typeof JoinPending>;
+export type JoinApprovedType = z.infer<typeof JoinApproved>;
+export type UserJoinedType = z.infer<typeof UserJoined>;
+export type JoinDeniedType = z.infer<typeof JoinDenied>;
+export type UserBannedType = z.infer<typeof UserBanned>;
+export type UserLeftType = z.infer<typeof UserLeft>;
+export type UserStateType = z.infer<typeof UserState>;
+export type JoinRoomType = z.infer<typeof JoinRoom>;
+export type ReSyncRoomStateType = z.infer<typeof ReSyncRoomState>;
+export type ChatMessageType = z.infer<typeof ChatMessage>;
+export type TypingType = z.infer<typeof Typing>;
+export type ReSyncBoardStateType = z.infer<typeof ReSyncBoardState>;
+export type BoardPatchType = z.infer<typeof BoardPatch>;
+export type RoomClosedType = z.infer<typeof RoomClosed>;
 
 // Socket.IO
 export type SocketEvent<T> = (payload: T) => void;
 
 export type ClientToServerEvents = {
-  cursor_move: SocketEvent<CursorMoveSchema>;
-  join_room: SocketEvent<JoinRoomSchema>;
-  resync_room_state: SocketEvent<ReSyncRoomStateSchema>;
-  typing: SocketEvent<TypingSchema>;
-  board_patch: SocketEvent<BoardPatchSchema>;
+  cursor_move: SocketEvent<CursorMoveType>;
+  join_room: SocketEvent<JoinRoomType>;
+  resync_room_state: SocketEvent<ReSyncRoomStateType>;
+  typing: SocketEvent<TypingType>;
+  board_patch: SocketEvent<BoardPatchType>;
 };
 
 export type ServerToClientEvents = {
-  cursor_move: SocketEvent<CursorMoveSchema>;
-  room_state: SocketEvent<RoomStateSchema>;
-  join_request: SocketEvent<JoinRequestSchema>;
-  join_pending: SocketEvent<JoinPendingSchema>;
-  join_approved: SocketEvent<JoinApprovedSchema>;
-  user_joined: SocketEvent<UserJoinedSchema>;
-  join_denied: SocketEvent<JoinDeniedSchema>;
-  user_banned: SocketEvent<UserBannedSchema>;
-  user_left: SocketEvent<UserLeftSchema>;
-  user_state: SocketEvent<UserStateSchema>;
-  chat_message: SocketEvent<ChatMessageSchema>;
-  resync_board_state: SocketEvent<ReSyncBoardStateSchema>;
-  typing: SocketEvent<TypingSchema>;
-  board_patch: SocketEvent<BoardPatchSchema>;
-  room_closed: SocketEvent<RoomClosedSchema>;
+  cursor_move: SocketEvent<CursorMoveType>;
+  room_state: SocketEvent<RoomStateType>;
+  join_request: SocketEvent<JoinRequestType>;
+  join_pending: SocketEvent<JoinPendingType>;
+  join_approved: SocketEvent<JoinApprovedType>;
+  user_joined: SocketEvent<UserJoinedType>;
+  join_denied: SocketEvent<JoinDeniedType>;
+  user_banned: SocketEvent<UserBannedType>;
+  user_left: SocketEvent<UserLeftType>;
+  user_state: SocketEvent<UserStateType>;
+  chat_message: SocketEvent<ChatMessageType>;
+  resync_board_state: SocketEvent<ReSyncBoardStateType>;
+  typing: SocketEvent<TypingType>;
+  board_patch: SocketEvent<BoardPatchType>;
+  room_closed: SocketEvent<RoomClosedType>;
 };
