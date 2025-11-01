@@ -35,12 +35,10 @@ export class MemberService {
     await this.r
       .multi()
       .hset(keyHash, member)
-      .expire(keyHash, MEMBER_TTL_SEC)
       .srem(keyPending, id)
       .srem(keyApproved, id)
       .srem(keyBanned, id)
       .sadd(keyStatus, id)
-      .expire(keyStatus, MEMBER_TTL_SEC)
       .exec();
   }
 
@@ -94,17 +92,25 @@ export class MemberService {
         .smembers(keyBanned)
         .exec()) ?? [];
 
-    let result: number[] = [];
-    res.forEach(([, arr]) => {
-      const val = (arr as []).map(Number).filter(Number.isFinite);
-      result = result.concat(val);
+    const result = new Set<number>();
+    res.forEach(([err, arr]) => {
+      if (!err) {
+        const val = (arr as []).map(Number).filter(Number.isFinite);
+        val.forEach((v) => result.add(v));
+      }
     });
-    return result;
+
+    return [...result];
   }
 
   async getIdsByStatus(roomId: number, status: Status): Promise<number[]> {
     const res = await this.r.smembers(MemberService.keyStatus(roomId, status));
-    return res.map(Number).filter(Number.isFinite);
+    const result = new Set<number>();
+    res
+      .map(Number)
+      .filter(Number.isFinite)
+      .forEach((v) => result.add(v));
+    return [...result];
   }
 
   async getMembersByIds(roomId: number, ids: number[]): Promise<Member[]> {
@@ -116,14 +122,16 @@ export class MemberService {
 
     const results: Member[] = [];
 
-    tuples.forEach(([, value], index) => {
-      const membershipId = Number((value as any).membershipId);
-      const role = (value as any).role as Role | undefined;
-      const status = (value as any).status as Status | undefined;
-      const userId = ids[index];
+    tuples.forEach(([err, value], index) => {
+      if (!err && value && Object.keys(value).length > 0) {
+        const membershipId = Number((value as any).membershipId);
+        const role = (value as any).role as Role | undefined;
+        const status = (value as any).status as Status | undefined;
+        const userId = ids[index];
 
-      if (Number.isFinite(membershipId) && role && status && userId)
-        results.push({ roomId, userId, membershipId, role, status });
+        if (Number.isFinite(membershipId) && role && status && userId)
+          results.push({ roomId, userId, membershipId, role, status });
+      }
     });
 
     return results;
