@@ -149,8 +149,8 @@ export class MessageService {
     roomId: number,
     msgIds: number[],
   ): Promise<ChatMessageType[]> {
+    if (msgIds.length === 0) return [];
     const pipe = this.r.pipeline();
-
     msgIds.forEach((id) => pipe.hgetall(MessageService.keyMsg(roomId, id)));
     const res = (await pipe.exec()) ?? [];
 
