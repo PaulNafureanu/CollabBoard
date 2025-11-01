@@ -9,8 +9,6 @@ export type Member = {
   status: Status;
 };
 
-const MEMBER_TTL_SEC = 7 * 24 * 60 * 60; //7d
-
 export class MemberService {
   constructor(private r: Redis) {}
 

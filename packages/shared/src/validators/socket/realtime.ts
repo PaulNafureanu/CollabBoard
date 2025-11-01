@@ -34,6 +34,8 @@ const Message = z.object({
   id: Id, //chat message id
   userId: Id,
   author: Name,
+  deletedById: Id.optional(),
+  isEdited: z.boolean(),
   text: z.string().trim().min(1).max(4096),
   at: MsEpoch,
 });
