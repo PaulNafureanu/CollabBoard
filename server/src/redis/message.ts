@@ -2,7 +2,7 @@ import type { ChatMessageType } from "@collabboard/shared";
 import type Redis from "ioredis";
 
 const MAX_CACHE = 100 as const;
-const MESSAGES_TTL_SEC = 7 * 24 * 60 * 60;
+const MESSAGES_TTL_SEC = 7 * 24 * 60 * 60; //7d
 
 export class MessageService {
   constructor(private r: Redis) {}
@@ -25,8 +25,8 @@ export class MessageService {
 
   async recent(roomId: number, limit = 50): Promise<ChatMessageType[]> {
     const key = MessageService.key(roomId);
-    const maxLimit = Math.max(0, limit - 1, MAX_CACHE - 1);
-    const rawArr = await this.r.lrange(key, 0, maxLimit);
+    const end = Math.min(limit - 1, MAX_CACHE - 1);
+    const rawArr = await this.r.lrange(key, 0, Math.max(0, end));
     const parsed: ChatMessageType[] = [];
 
     for (const rawMsg of rawArr) {

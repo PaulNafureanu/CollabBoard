@@ -13,6 +13,7 @@ const Role = z.enum(["OWNER", "MODERATOR", "EDITOR", "MEMBER", "VIEWER"]);
 const Status = z.enum(["PENDING", "APPROVED", "BANNED"]);
 
 const RoomMember = z.object({
+  id: Id, //membership id
   userId: Id,
   username: Name,
   role: Role,
@@ -30,7 +31,7 @@ const Cursor = z.object({
 });
 
 const Message = z.object({
-  id: Id,
+  id: Id, //chat message id
   userId: Id,
   author: Name,
   text: z.string().trim().min(1).max(4096),

@@ -9,17 +9,17 @@ export type PageData<T extends Object> = {
 };
 
 export enum Status {
-  PENDING,
-  APPROVED,
-  BANNED,
+  PENDING = "PENDING",
+  APPROVED = "APPROVED",
+  BANNED = "BANNED",
 }
 
 export enum Role {
-  OWNER,
-  MODERATOR,
-  EDITOR,
-  MEMBER,
-  VIEWER,
+  OWNER = "OWNER",
+  MODERATOR = "MODERATOR",
+  EDITOR = "EDITOR",
+  MEMBER = "MEMBER",
+  VIEWER = "VIEWER",
 }
 
 export type PublicUser = {
