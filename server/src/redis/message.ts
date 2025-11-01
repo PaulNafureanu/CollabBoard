@@ -23,6 +23,47 @@ export class MessageService {
   private static keyMsg = (roomId: number, msgId: number) =>
     `room:${roomId}:message:${msgId}`;
 
+  private static parseMsg = (
+    roomId: number,
+    msgId: number,
+    res: Record<string, string>,
+  ): ChatMessageType | null => {
+    if (!res || Object.keys(res).length === 0) return null;
+
+    const author = res.author?.trim();
+    const text = res.text?.trim();
+    const at = Number(res.at);
+    const isEdited = Number(res.isEdited);
+    const userId = res.userId ? Number(res.userId) : undefined;
+    const deletedById = res.deletedById ? Number(res.deletedById) : undefined;
+
+    const isAtValid = Number.isFinite(at);
+    const isFlagValid = Number.isFinite(isEdited);
+
+    if (!author || !text || !isAtValid || !isFlagValid) return null;
+    if (res.userId && !Number.isFinite(userId)) return null;
+    if (res.deletedById && !Number.isFinite(deletedById)) return null;
+
+    const msg: ChatMessageType = {
+      id: msgId,
+      author,
+      text,
+      at,
+      isEdited: Boolean(isEdited),
+      userId,
+      roomId,
+      deletedById,
+    };
+
+    return msg;
+  };
+
+  private static parseStrIds = (res: string[], limit: number, max: number) => {
+    const unique = [...new Set(res)];
+    const count = Math.max(0, Math.min(limit, max));
+    return unique.map(Number).filter(Number.isFinite).slice(0, count);
+  };
+
   async setAll({
     roomId,
     id,
@@ -33,6 +74,7 @@ export class MessageService {
     isEdited,
     at,
   }: ChatMessageType) {
+    if (!userId) return;
     const keyRoom = MessageService.keyRoom(roomId);
     const keyUser = MessageService.keyUser(roomId, userId);
     const keyMsg = MessageService.keyMsg(roomId, id);
@@ -41,18 +83,18 @@ export class MessageService {
       author,
       text,
       at: String(at),
-      isEdited: String(isEdited),
+      isEdited: isEdited ? "1" : "0",
     };
 
     if (userId) (msg as any).userId = String(userId);
     if (deletedById) (msg as any).deletedById = String(deletedById);
 
-    if (await this.r.exists(keyMsg)) return; // prevents duplicates in the list
+    if (await this.r.exists(keyMsg)) return; // prevents some duplicates in the list
 
     await this.r
       .multi()
       .lpush(keyRoom, msgId)
-      .ltrim(keyRoom, 0, 3 * MAX_CACHE_PER_ROOM - 1) // some dups can still occur
+      .ltrim(keyRoom, 0, 3 * MAX_CACHE_PER_ROOM - 1) // dups can still occur
       .zadd(keyUser, at, msgId)
       .zremrangebyrank(keyUser, 0, -(MAX_CACHE_PER_USER + 1))
       .hset(keyMsg, msg)
@@ -70,12 +112,11 @@ export class MessageService {
     at,
   }: ChatMessageType) {
     const keyMsg = MessageService.keyMsg(roomId, id);
-    const msgId = String(id);
     const msg = {
       author,
       text,
       at: String(at),
-      isEdited: String(isEdited),
+      isEdited: isEdited ? "1" : "0",
     };
 
     if (userId) (msg as any).userId = String(userId);
@@ -84,51 +125,45 @@ export class MessageService {
     await this.r.hset(keyMsg, msg);
   }
 
-  async recentMsgIdsByRoom(roomId: number): Promise<number[]> {
-    return [];
+  async recentMsgIdsByRoom(roomId: number, limit: number): Promise<number[]> {
+    const keyRoom = MessageService.keyRoom(roomId);
+    if (limit <= 0) return [];
+    const res = await this.r.lrange(keyRoom, 0, 3 * MAX_CACHE_PER_ROOM - 1);
+    return MessageService.parseStrIds(res, limit, MAX_CACHE_PER_ROOM);
   }
+
   async recentMsgIdsByUser(roomId: number, userId: number): Promise<number[]> {
-    return [];
+    const keyUser = MessageService.keyUser(roomId, userId);
+    const res = await this.r.zrange(keyUser, 0, MAX_CACHE_PER_USER - 1, "REV");
+    const max = MAX_CACHE_PER_USER;
+    return MessageService.parseStrIds(res, max, max);
   }
+
   async getMsg(roomId: number, msgId: number): Promise<ChatMessageType | null> {
-    return null;
+    const key = MessageService.keyMsg(roomId, msgId);
+    const res = await this.r.hgetall(key);
+    return MessageService.parseMsg(roomId, msgId, res);
   }
+
   async getMsgByIds(
     roomId: number,
     msgIds: number[],
   ): Promise<ChatMessageType[]> {
-    return [];
+    const pipe = this.r.pipeline();
+
+    msgIds.forEach((id) => pipe.hgetall(MessageService.keyMsg(roomId, id)));
+    const res = (await pipe.exec()) ?? [];
+
+    return res
+      .map(([err, value], index) => {
+        const id = msgIds[index];
+        if (err || !id) return null;
+        return MessageService.parseMsg(
+          roomId,
+          id,
+          value as Record<string, string>,
+        );
+      })
+      .filter((v) => v !== null);
   }
 }
-
-// private static key(roomId: number) {
-//   return `room:${roomId}:messages`;
-// }
-
-// async push({ roomId, id, userId, author, text, at }: ChatMessageType) {
-//   const key = MessageService.key(roomId);
-//   const msg = JSON.stringify({ id, userId, author, text, at });
-
-//   await this.r
-//     .multi()
-//     .lpush(key, msg)
-//     .ltrim(key, 0, MAX_CACHE - 1)
-//     .expire(key, MESSAGES_TTL_SEC)
-//     .exec();
-// }
-
-// async recent(roomId: number, limit = 50): Promise<ChatMessageType[]> {
-//   const key = MessageService.key(roomId);
-//   const end = Math.min(limit - 1, MAX_CACHE - 1);
-//   const rawArr = await this.r.lrange(key, 0, Math.max(0, end));
-//   const parsed: ChatMessageType[] = [];
-
-//   for (const rawMsg of rawArr) {
-//     try {
-//       const msg = JSON.parse(rawMsg) as ChatMessageType;
-//       parsed.push(msg);
-//     } catch (err) {}
-//   }
-
-//   return parsed;
-// }

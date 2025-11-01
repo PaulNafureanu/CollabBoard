@@ -32,7 +32,7 @@ const Cursor = z.object({
 
 const Message = z.object({
   id: Id, //chat message id
-  userId: Id,
+  userId: Id.optional(), // TODO: make this optional
   author: Name,
   deletedById: Id.optional(),
   isEdited: z.boolean(),
