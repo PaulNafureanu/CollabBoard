@@ -46,7 +46,7 @@ const BoardState = z.object({
   boardName: Name,
   dbVersion: PosNumber.int(), // database version (increments after db persistence)
   rtVersion: PosNumber.int(), // realtime version (increments after each successful board patch)
-  payload: JsonSchema,
+  payload: JsonSchema, // full payload
 });
 
 // Broadcast to the room
