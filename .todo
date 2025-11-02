@@ -1,3 +1,7 @@
+TODO:
+
+- you made userId field from Message (in realtime zod validators files) optional: typecheck and make the proper changes
+
 ✅ Definition of Done — Current Phase
 
 1. Shared Contracts
