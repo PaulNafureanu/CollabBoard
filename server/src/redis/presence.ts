@@ -1,7 +1,19 @@
 import type Redis from "ioredis";
 
 export class PresenceService {
-  constructor(private r: Redis) {}
+  constructor(private r: Redis) {
+    if (!("disconnectUser" in this.r)) {
+      this.r.defineCommand("disconnectUser", {
+        numberOfKeys: 2,
+        lua: `
+        redis.call("SREM", KEYS[1], ARGV[1])
+        local count = redis.call("SCARD", KEYS[1])
+        if count == 0 then redis.call("SREM", KEYS[2], ARGV[2]) end
+        return count
+    `,
+      });
+    }
+  }
 
   private static keyOnline = (roomId: number) => `room:${roomId}:online`;
   private static keyConns = (roomId: number, userId: number) =>
@@ -23,18 +35,7 @@ export class PresenceService {
     const keyOnline = PresenceService.keyOnline(roomId);
     const usrId = String(userId);
 
-    const luaScript = `
-    redis.call("SREM", KEYS[1], ARGV[1])
-    local count = redis.call("SCARD", KEYS[1])
-    if count == 0 then
-        redis.call("SREM", KEYS[2], ARGV[2])
-    end
-    return count
-    `;
-
-    return (await this.r.eval(
-      luaScript,
-      2,
+    return (await (this.r as any).disconnectUser(
       keyConns,
       keyOnline,
       socketId,
@@ -70,7 +71,7 @@ export class PresenceService {
 
     const pipe = this.r.pipeline();
 
-    userIds.forEach((id) => pipe.sismember(key, id));
+    userIds.forEach((id) => pipe.sismember(key, String(id)));
     const res = (await pipe.exec()) ?? [];
 
     const results: boolean[] = res.map(([err, val]) => {

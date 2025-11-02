@@ -2,6 +2,8 @@ TODO:
 
 - you made userId field from Message (in realtime zod validators files) optional: typecheck and make the proper changes
 
+- you change the board patch and board state zod validators version fields: modifications are needed on the clients of these validators and infered types
+
 ✅ Definition of Done — Current Phase
 
 1. Shared Contracts

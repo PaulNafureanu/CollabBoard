@@ -44,8 +44,8 @@ const BoardState = z.object({
   id: Id,
   boardId: Id,
   boardName: Name,
-  version: PosNumber.int(),
-  baseVersion: PosNumber.int(),
+  dbVersion: PosNumber.int(), // database version (increments after db persistence)
+  rtVersion: PosNumber.int(), // realtime version (increments after each successful board patch)
   payload: JsonSchema,
 });
 
@@ -203,7 +203,7 @@ export const BoardPatch = z
   .object({
     roomId: Id,
     boardStateId: Id,
-    baseVersion: PosNumber.int(),
+    rtVersion: PosNumber.int(), //realtime version
     //TODO: fix this when you know the shape of the json payload
     patch: z.object({
       path: JsonPathSchema,
