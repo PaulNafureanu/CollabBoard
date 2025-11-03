@@ -1,5 +1,6 @@
 import type Redis from "ioredis";
 import type { JsonType } from "@collabboard/shared";
+import { RedisLock } from "./lock";
 
 /**
  *  where id is boardStateId (active board state in the room)
@@ -33,6 +34,8 @@ export type ActiveBoardState = {
   payload: JsonType;
 };
 
+type PatchEntry = { v: number; uid: number; at: number; p: JsonType };
+
 export class BoardStateService {
   constructor(private r: Redis) {}
 
@@ -41,6 +44,7 @@ export class BoardStateService {
   private static keyPayload = (roomId: number) =>
     `room:${roomId}:board:payload`;
   private static keyStream = (roomId: number) => `room:${roomId}:board:stream`;
+  private static keyLock = (roomId: number) => `room:${roomId}:board:lock`;
 
   /**
    * After db persistence or after switching active board / board states,
@@ -58,6 +62,12 @@ export class BoardStateService {
     const keyState = BoardStateService.keyState(roomId);
     const keyPayload = BoardStateService.keyPayload(roomId);
     const keyStream = BoardStateService.keyStream(roomId);
+    const keyLock = BoardStateService.keyLock(roomId);
+
+    const redisLocker = new RedisLock(this.r);
+    const token = RedisLock.generateToken();
+    const got = await redisLocker.tryAcquireWithRetry(keyLock, token);
+    if (!got) throw new Error("activate_busy");
 
     const id = String(boardStateId);
     const rtVersion = "0";
@@ -75,14 +85,17 @@ export class BoardStateService {
     };
 
     const snapshot = JSON.stringify(payload);
-
-    await this.r
-      .multi()
-      .del(keyStream)
-      .hset(keyMeta, metadata)
-      .hset(keyState, statedata)
-      .set(keyPayload, snapshot)
-      .exec();
+    try {
+      await this.r
+        .multi()
+        .del(keyStream)
+        .hset(keyMeta, metadata)
+        .hset(keyState, statedata)
+        .set(keyPayload, snapshot)
+        .exec();
+    } finally {
+      await redisLocker.releaseLock(keyLock, token);
+    }
   }
 
   async setMeta(roomId: number, metadata: MetaData) {
@@ -145,5 +158,37 @@ export class BoardStateService {
     return JSON.parse(res);
   }
 
-  async streamSince() {}
+  async streamSince(
+    roomId: number,
+    fromRt: number,
+    limit = 500,
+  ): Promise<PatchEntry[]> {
+    const key = BoardStateService.keyStream(roomId);
+    const entries = await this.r.xrange(key, "-", "+");
+    const out: PatchEntry[] = [];
+
+    for (const [, kv] of entries) {
+      const map: Record<string, string> = {};
+      for (let i = 0; i < kv.length; i += 2)
+        map[kv[i] as string] = kv[i + 1] as string;
+
+      const v = Number(map.v);
+      if (!Number.isFinite(v) || v < fromRt) continue;
+
+      const uid = Number(map.uid);
+      const at = Number(map.at);
+      let p: JsonType | null = null;
+
+      try {
+        if (map.p) p = JSON.parse(map.p);
+      } catch {}
+
+      if (p && Number.isFinite(uid) && Number.isFinite(at)) {
+        out.push({ v, uid, at, p });
+        if (out.length > limit) break;
+      }
+    }
+
+    return out;
+  }
 }
