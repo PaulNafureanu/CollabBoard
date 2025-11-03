@@ -13,15 +13,15 @@ import type { JsonType } from "@collabboard/shared";
 const STREAM_MAXLEN = 1000;
 
 export type MetaData = {
-  id: string;
-  boardId: string;
+  id: number;
+  boardId: number;
   boardName: string;
 };
 
 export type StateData = {
-  id: string;
-  rtVersion: string;
-  dbVersion: string;
+  id: number;
+  rtVersion: number;
+  dbVersion: number;
 };
 
 export type ActiveBoardState = {
@@ -62,13 +62,13 @@ export class BoardStateService {
     const id = String(boardStateId);
     const rtVersion = "0";
 
-    const metadata: MetaData = {
+    const metadata = {
       id,
       boardId: String(boardId),
       boardName,
     };
 
-    const statedata: StateData = {
+    const statedata = {
       id,
       rtVersion,
       dbVersion: String(version),
@@ -107,11 +107,13 @@ export class BoardStateService {
     const res = await this.r.hgetall(key);
     if (!res || Object.keys(res).length === 0) return null;
 
-    const id = res.id;
-    const boardId = res.boardId;
+    const id = Number(res.id);
+    const boardId = Number(res.boardId);
     const boardName = res.boardName;
 
-    if (!id || !boardId || !boardName) return null;
+    if (!Number.isFinite(id) || !Number.isFinite(boardId) || !boardName)
+      return null;
+
     const metadata: MetaData = { id, boardId, boardName };
     return metadata;
   }
@@ -121,18 +123,26 @@ export class BoardStateService {
     const res = await this.r.hgetall(key);
     if (!res || Object.keys(res).length === 0) return null;
 
-    const id = res.id;
-    const rtVersion = res.rtVersion;
-    const dbVersion = res.dbVersion;
+    const id = Number(res.id);
+    const rtVersion = Number(res.rtVersion);
+    const dbVersion = Number(res.dbVersion);
 
-    if (!id || !rtVersion || !dbVersion) return null;
+    if (
+      !Number.isFinite(id) ||
+      !Number.isFinite(rtVersion) ||
+      !Number.isFinite(dbVersion)
+    )
+      return null;
+
     const statedata: StateData = { id, rtVersion, dbVersion };
     return statedata;
   }
 
-  async loadPayload(roomId: number) {
+  async loadPayload(roomId: number): Promise<JsonType | null> {
     const key = BoardStateService.keyPayload(roomId);
-    return await this.r.get(key);
+    const res = await this.r.get(key);
+    if (!res) return null;
+    return JSON.parse(res);
   }
 
   async streamSince() {}
