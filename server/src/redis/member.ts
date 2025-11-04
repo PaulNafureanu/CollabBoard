@@ -9,13 +9,18 @@ export type Member = {
   status: Status;
 };
 
+const ALL_STATUSES: Status[] = Object.values(Status);
+const ALL_ROLES: Role[] = Object.values(Role);
+
 export class MemberService {
   constructor(private r: Redis) {}
 
-  private static keyMember = (roomId: number, userId: number) =>
+  static keyMember = (roomId: number, userId: number) =>
     `room:${roomId}:member:${userId}`;
-  private static keyStatus = (roomId: number, status: Status) =>
+  static keyStatus = (roomId: number, status: Status) =>
     `room:${roomId}:members:${status}`;
+  static keyRole = (roomId: number, role: Role) =>
+    `room:${roomId}:members:${role}`;
 
   async set({ roomId, userId, membershipId, role, status }: Member) {
     // Hash
@@ -23,37 +28,30 @@ export class MemberService {
     const member = { membershipId: String(membershipId), role, status };
 
     // Set
-    const keyPending = MemberService.keyStatus(roomId, Status.PENDING);
-    const keyApproved = MemberService.keyStatus(roomId, Status.APPROVED);
-    const keyBanned = MemberService.keyStatus(roomId, Status.BANNED);
     const keyStatus = MemberService.keyStatus(roomId, status);
+    const keyRole = MemberService.keyRole(roomId, role);
     const id = String(userId);
 
-    // Atomic set
-    await this.r
-      .multi()
-      .hset(keyHash, member)
-      .srem(keyPending, id)
-      .srem(keyApproved, id)
-      .srem(keyBanned, id)
-      .sadd(keyStatus, id)
-      .exec();
+    const multi = this.r.multi().hset(keyHash, member);
+    for (const s of ALL_STATUSES)
+      multi.srem(MemberService.keyStatus(roomId, s), id);
+    multi.sadd(keyStatus, id);
+
+    for (const r of ALL_ROLES) multi.srem(MemberService.keyRole(roomId, r), id);
+    multi.sadd(keyRole, id);
+    await multi.exec();
   }
 
   async remove(roomId: number, userId: number) {
     const keyHash = MemberService.keyMember(roomId, userId);
-    const keyPending = MemberService.keyStatus(roomId, Status.PENDING);
-    const keyApproved = MemberService.keyStatus(roomId, Status.APPROVED);
-    const keyBanned = MemberService.keyStatus(roomId, Status.BANNED);
     const id = String(userId);
 
-    await this.r
-      .multi()
-      .del(keyHash)
-      .srem(keyPending, id)
-      .srem(keyApproved, id)
-      .srem(keyBanned, id)
-      .exec();
+    const multi = this.r.multi().del(keyHash);
+    for (const status of ALL_STATUSES)
+      multi.srem(MemberService.keyStatus(roomId, status), id);
+    for (const role of ALL_ROLES)
+      multi.srem(MemberService.keyRole(roomId, role), id);
+    await multi.exec();
   }
 
   async getMember(roomId: number, userId: number): Promise<Member | null> {
@@ -78,37 +76,25 @@ export class MemberService {
   }
 
   async getRoomIds(roomId: number): Promise<number[]> {
-    const keyPending = MemberService.keyStatus(roomId, Status.PENDING);
-    const keyApproved = MemberService.keyStatus(roomId, Status.APPROVED);
-    const keyBanned = MemberService.keyStatus(roomId, Status.BANNED);
-
-    const res =
-      (await this.r
-        .multi()
-        .smembers(keyPending)
-        .smembers(keyApproved)
-        .smembers(keyBanned)
-        .exec()) ?? [];
-
-    const result = new Set<number>();
-    res.forEach(([err, arr]) => {
-      if (!err) {
-        const val = (arr as []).map(Number).filter(Number.isFinite);
-        val.forEach((v) => result.add(v));
-      }
-    });
-
-    return [...result];
+    const keys = ALL_STATUSES.map((status) =>
+      MemberService.keyStatus(roomId, status),
+    );
+    const res = await this.r.sunion(...keys);
+    return res.map(Number).filter(Number.isFinite);
   }
 
-  async getIdsByStatus(roomId: number, status: Status): Promise<number[]> {
-    const res = await this.r.smembers(MemberService.keyStatus(roomId, status));
-    const result = new Set<number>();
-    res
-      .map(Number)
-      .filter(Number.isFinite)
-      .forEach((v) => result.add(v));
-    return [...result];
+  async getIdsByStatus(roomId: number, statuses: Status[]): Promise<number[]> {
+    const keys = statuses.map((status) =>
+      MemberService.keyStatus(roomId, status),
+    );
+    const res = await this.r.sunion(...keys);
+    return res.map(Number).filter(Number.isFinite);
+  }
+
+  async getIdsByRole(roomId: number, roles: Role[]): Promise<number[]> {
+    const keys = roles.map((role) => MemberService.keyRole(roomId, role));
+    const res = await this.r.sunion(...keys);
+    return res.map(Number).filter(Number.isFinite);
   }
 
   async getMembersByIds(roomId: number, ids: number[]): Promise<Member[]> {
