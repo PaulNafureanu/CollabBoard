@@ -16,7 +16,7 @@ import { RedisLock } from "./lock";
  */
 
 const STREAM_MAXLEN = 1000;
-const PATCH_ATTEMPS = 3;
+const PATCH_ATTEMPTS = 3;
 
 export type MetaData = {
   id: number;
@@ -50,7 +50,10 @@ export enum PATCH_CONFLICT_REASONS {
 }
 
 export class BoardStateService {
-  constructor(private r: Redis) {}
+  constructor(
+    private r: Redis,
+    private locker: RedisLock,
+  ) {}
 
   private static keyMeta = (roomId: number) => `room:${roomId}:board:meta`;
   private static keyState = (roomId: number) => `room:${roomId}:board:state`;
@@ -77,9 +80,8 @@ export class BoardStateService {
     const keyStream = BoardStateService.keyStream(roomId);
     const keyLock = BoardStateService.keyLock(roomId);
 
-    const redisLocker = new RedisLock(this.r);
     const token = RedisLock.generateToken();
-    const got = await redisLocker.tryAcquireWithRetry(keyLock, token);
+    const got = await this.locker.tryAcquireWithRetry(keyLock, token);
     if (!got) throw new Error("activate_busy");
 
     const id = String(boardStateId);
@@ -107,7 +109,7 @@ export class BoardStateService {
         .set(keyPayload, snapshot)
         .exec();
     } finally {
-      await redisLocker.releaseLock(keyLock, token);
+      await this.locker.releaseLock(keyLock, token);
     }
   }
 
@@ -121,9 +123,9 @@ export class BoardStateService {
     await this.r.hset(key, statedata);
   }
 
-  async setPayload(roomId: number, payload: string) {
+  async setPayload(roomId: number, payload: JsonType) {
     const key = BoardStateService.keyPayload(roomId);
-    await this.r.set(key, payload);
+    await this.r.set(key, JSON.stringify(payload));
   }
 
   async applyPatch({
@@ -140,7 +142,7 @@ export class BoardStateService {
     const keyPayload = BoardStateService.keyPayload(roomId);
     const keyStream = BoardStateService.keyStream(roomId);
 
-    for (let i = 0; i < PATCH_ATTEMPS; i++) {
+    for (let i = 0; i < PATCH_ATTEMPTS; i++) {
       await this.r.watch(keyState, keyPayload);
       const state = await this.r.hgetall(keyState);
       if (!state || !state.rtVersion) {
