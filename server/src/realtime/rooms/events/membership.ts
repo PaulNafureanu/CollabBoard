@@ -1,8 +1,12 @@
 import {
+  JoinApprovedType,
+  JoinDeniedType,
   JoinPendingType,
   JoinRequestType,
   PublicMembership,
   Role,
+  UserBannedType,
+  UserJoinedType,
 } from "@collabboard/shared";
 import { roleRoom, userRoom } from "..";
 import { SocketType } from "../../types";
@@ -13,17 +17,11 @@ export async function emitJoinRequest(
   dbMembership: PublicMembership,
   dbExtra: { username: string },
 ) {
-  const { roomId, id, updatedAt } = dbMembership;
+  const { roomId, id: membershipId, updatedAt } = dbMembership;
   const { username } = dbExtra;
 
   const userId = socket.data.user.id;
-  const membershipId = id;
-  //TODO: check the conversion from datatime string to number
-  const at = Number(updatedAt);
-  const rooms = [
-    roleRoom(roomId, Role.OWNER),
-    roleRoom(roomId, Role.MODERATOR),
-  ];
+  const at = updatedAt.getTime();
 
   const payload: JoinRequestType = {
     roomId,
@@ -32,16 +30,53 @@ export async function emitJoinRequest(
     membershipId,
     at,
   };
-  socket.to(rooms).emit("join_request", payload);
+
+  const rooms = [
+    roleRoom(roomId, Role.OWNER),
+    roleRoom(roomId, Role.MODERATOR),
+  ];
+  socket.nsp.to(rooms).emit("join_request", payload);
 }
 
-export function emitJoinPending(
-  socket: SocketType,
-  roomId: number,
-  at: string, //Question: what type does prisma db gives back for datatime
-) {
+export function emitJoinPending(socket: SocketType, roomId: number, at: Date) {
   const userId = socket.data.user.id;
   const room = userRoom(userId);
-  const payload: JoinPendingType = { roomId, at: Number(at) };
-  socket.to(room).emit("join_pending", payload);
+  const payload: JoinPendingType = { roomId, at: at.getTime() };
+  socket.nsp.in(room).emit("join_pending", payload);
 }
+
+export function emitJoinApproved(socket: SocketType, roomId: number, at: Date) {
+  const userId = socket.data.user.id;
+  const room = userRoom(userId);
+  const payload: JoinApprovedType = { roomId, at: at.getTime() };
+  socket.nsp.in(room).emit("join_approved", payload);
+}
+
+// export function emitUserJoined(socket:SocketType, d) {
+//     const room = userRoom(socket.data.user.id);
+//     const payload:UserJoinedType = {}
+// }
+
+export function emitJoinDenied(
+  socket: SocketType,
+  roomId: number,
+  at: Date,
+  reason?: string,
+) {
+  const room = userRoom(socket.data.user.id);
+  const payload: JoinDeniedType = { roomId, reason, at: at.getTime() };
+  socket.nsp.in(room).emit("join_denied", payload);
+}
+
+export function emitUserBanned(
+  socket: SocketType,
+  roomId: number,
+  at: Date,
+  reason?: string,
+) {
+  const room = userRoom(socket.data.user.id);
+  const payload: UserBannedType = { roomId, reason, at: at.getTime() };
+  socket.nsp.in(room).emit("user_banned", payload);
+}
+
+export function emitUserLeft() {}

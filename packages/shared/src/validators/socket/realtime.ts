@@ -6,7 +6,7 @@ import { JsonPathSchema, JsonSchema } from "../../common/json";
  */
 
 export const Id = z.coerce.number().int().positive();
-export const MsEpoch = z.number().int().nonnegative(); //TODO: Prefer server time for 'at' fields
+export const MsEpoch = z.number().int().nonnegative();
 const PosNumber = z.number().nonnegative();
 const Name = z.string().trim().min(1).max(64);
 const Role = z.enum(["OWNER", "MODERATOR", "EDITOR", "MEMBER", "VIEWER"]);

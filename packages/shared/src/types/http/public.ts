@@ -27,14 +27,14 @@ export type PublicUser = {
   username: string;
   email: string;
   isAnonymous: boolean;
-  createdAt: string;
+  createdAt: Date;
 };
 
 export type PublicRoom = {
   id: number;
   name: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
   activeBoardStateId: number;
 };
 
@@ -44,8 +44,8 @@ export type PublicMembership = {
   roomId: number;
   role: Role;
   status: Status;
-  joinedAt: string;
-  updatedAt: string;
+  joinedAt: Date;
+  updatedAt: Date;
 };
 
 export type PublicMessage = {
@@ -54,15 +54,15 @@ export type PublicMessage = {
   userId: number;
   author: string;
   text: string;
-  createdAt: string;
+  createdAt: Date;
 };
 
 export type PublicBoard = {
   id: number;
   roomId: number;
   name: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
   lastState: number;
 };
 
@@ -71,7 +71,7 @@ export type PublicBoardState = {
   boardId: number;
   version: number;
   payload: string;
-  createdAt: string;
+  createdAt: Date;
 };
 
 export type PublicShapes =
