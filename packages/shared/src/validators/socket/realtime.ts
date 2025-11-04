@@ -202,14 +202,13 @@ export const ReSyncBoardState = BoardState.extend({
 export const BoardPatch = z
   .object({
     roomId: Id,
+    userId: Id,
     boardStateId: Id,
     rtVersion: PosNumber.int(), //realtime version
-    //TODO: fix this when you know the shape of the json payload
     patch: z.object({
       path: JsonPathSchema,
       value: JsonSchema,
     }),
-
     at: MsEpoch,
   })
   .strict();

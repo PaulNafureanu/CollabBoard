@@ -1,4 +1,5 @@
 export * from "./common/json";
+export * from "./common/patch";
 export * from "./types/http/body";
 export * from "./types/http/public";
 export * from "./types/socket/realtime";

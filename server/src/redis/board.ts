@@ -1,5 +1,9 @@
 import type Redis from "ioredis";
-import type { JsonType } from "@collabboard/shared";
+import {
+  applyPatchToPayload,
+  type BoardPatchType,
+  type JsonType,
+} from "@collabboard/shared";
 import { RedisLock } from "./lock";
 
 /**
@@ -12,6 +16,7 @@ import { RedisLock } from "./lock";
  */
 
 const STREAM_MAXLEN = 1000;
+const PATCH_ATTEMPS = 3;
 
 export type MetaData = {
   id: number;
@@ -34,7 +39,15 @@ export type ActiveBoardState = {
   payload: JsonType;
 };
 
-type PatchEntry = { v: number; uid: number; at: number; p: JsonType };
+export type PatchEntry = { v: number; uid: number; at: number; p: JsonType };
+export enum PATCH_CONFLICT_REASONS {
+  UNDEFINED_STATE = "UNDEFINED_STATE",
+  UNDEFINED_SERVER_RT = "UNDEFINED_SERVER_RT",
+  VERSION_CONFLICT = "VERSION_CONFLICT",
+  UNDEFINED_PAYLOAD = "UNDEFINED_PAYLOAD",
+  PATCH_FN_CONFLICT = "PATCH_FN_CONFLICT",
+  PATCH_RETRY_FAILED = "PATCH_RETRY_FAILED",
+}
 
 export class BoardStateService {
   constructor(private r: Redis) {}
@@ -113,7 +126,107 @@ export class BoardStateService {
     await this.r.set(key, payload);
   }
 
-  async applyPatch() {}
+  async applyPatch({
+    roomId,
+    userId,
+    rtVersion,
+    patch,
+    at,
+  }: BoardPatchType): Promise<
+    | { ok: true; newRt: number }
+    | { ok: false; reason: PATCH_CONFLICT_REASONS; serverRt: number }
+  > {
+    const keyState = BoardStateService.keyState(roomId);
+    const keyPayload = BoardStateService.keyPayload(roomId);
+    const keyStream = BoardStateService.keyStream(roomId);
+
+    for (let i = 0; i < PATCH_ATTEMPS; i++) {
+      await this.r.watch(keyState, keyPayload);
+      const state = await this.r.hgetall(keyState);
+      if (!state || !state.rtVersion) {
+        await this.r.unwatch();
+        return {
+          ok: false,
+          reason: PATCH_CONFLICT_REASONS.UNDEFINED_STATE,
+          serverRt: NaN,
+        };
+      }
+
+      const serverRt = Number(state.rtVersion);
+
+      if (!Number.isFinite(serverRt)) {
+        await this.r.unwatch();
+        return {
+          ok: false,
+          reason: PATCH_CONFLICT_REASONS.UNDEFINED_SERVER_RT,
+          serverRt: NaN,
+        };
+      }
+
+      if (rtVersion !== serverRt) {
+        await this.r.unwatch();
+        return {
+          ok: false,
+          reason: PATCH_CONFLICT_REASONS.VERSION_CONFLICT,
+          serverRt,
+        };
+      }
+
+      const raw = await this.r.get(keyPayload);
+      if (!raw) {
+        await this.r.unwatch();
+        return {
+          ok: false,
+          reason: PATCH_CONFLICT_REASONS.UNDEFINED_PAYLOAD,
+          serverRt,
+        };
+      }
+
+      let nextPayload: JsonType;
+
+      try {
+        const current = JSON.parse(raw) as JsonType;
+        nextPayload = applyPatchToPayload(current, patch);
+      } catch {
+        await this.r.unwatch();
+        return {
+          ok: false,
+          reason: PATCH_CONFLICT_REASONS.PATCH_FN_CONFLICT,
+          serverRt,
+        };
+      }
+
+      const newRt = serverRt + 1;
+      const multi = this.r.multi();
+      multi.set(keyPayload, JSON.stringify(nextPayload));
+      multi.hincrby(keyState, "rtVersion", 1);
+      multi.xadd(
+        keyStream,
+        "MAXLEN",
+        "~",
+        String(STREAM_MAXLEN),
+        "*",
+        "v",
+        String(newRt),
+        "uid",
+        String(userId),
+        "at",
+        String(at),
+        "p",
+        JSON.stringify(patch),
+      );
+
+      const res = await multi.exec();
+      if (res) return { ok: true, newRt };
+    }
+
+    const latest = await this.r.hget(keyState, "rtVersion");
+    return {
+      ok: false,
+      reason: PATCH_CONFLICT_REASONS.PATCH_RETRY_FAILED,
+      serverRt: Number(latest ?? NaN),
+    };
+  }
 
   async loadMeta(roomId: number): Promise<MetaData | null> {
     const key = BoardStateService.keyMeta(roomId);
