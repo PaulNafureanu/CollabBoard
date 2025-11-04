@@ -1,41 +1,47 @@
 import {
+  JoinPendingType,
   JoinRequestType,
   PublicMembership,
   Role,
-  Status,
 } from "@collabboard/shared";
+import { roleRoom, userRoom } from "..";
 import { SocketType } from "../../types";
-import { MemberService } from "../../../redis/member";
-import Redis from "ioredis";
-import { PresenceService } from "../../../redis/presence";
 
 // POST /membership with pending => server emits join_request to Admin / Mods
 export async function emitJoinRequest(
   socket: SocketType,
-  redis: Redis,
   dbMembership: PublicMembership,
+  dbExtra: { username: string },
 ) {
-  const { roomId } = dbMembership;
-  const memberSrv = new MemberService(redis);
-  const presenceSrv = new PresenceService(redis);
+  const { roomId, id, updatedAt } = dbMembership;
+  const { username } = dbExtra;
 
-  const mods = await memberSrv.getIdsByRole(roomId, [
-    Role.OWNER,
-    Role.MODERATOR,
-  ]);
-  const onlineUsers = await presenceSrv.listOnlineUsers(roomId);
+  const userId = socket.data.user.id;
+  const membershipId = id;
+  //TODO: check the conversion from datatime string to number
+  const at = Number(updatedAt);
+  const rooms = [
+    roleRoom(roomId, Role.OWNER),
+    roleRoom(roomId, Role.MODERATOR),
+  ];
 
-  //   const online = await
-
-  //   const { roomId } = dbMembership;
-  //   const srv = new MemberService(redis);
-  //   const approvedUserIds = await srv.getIdsByStatus(roomId, Status.APPROVED);
-  //   const roomMmebers = await srv.getMembersByIds(roomId, approvedUserIds);
-  //   const modMembers = roomMmebers.filter(
-  //     ({ role }) => role === Role.MODERATOR || role === Role.OWNER,
-  //   );
-  //   const payload: JoinRequestType = {} as JoinRequestType;
-  //   socket.to([]).emit("join_request", payload);
+  const payload: JoinRequestType = {
+    roomId,
+    userId,
+    username,
+    membershipId,
+    at,
+  };
+  socket.to(rooms).emit("join_request", payload);
 }
 
-export function emitJoinPending() {}
+export function emitJoinPending(
+  socket: SocketType,
+  roomId: number,
+  at: string, //Question: what type does prisma db gives back for datatime
+) {
+  const userId = socket.data.user.id;
+  const room = userRoom(userId);
+  const payload: JoinPendingType = { roomId, at: Number(at) };
+  socket.to(room).emit("join_pending", payload);
+}
