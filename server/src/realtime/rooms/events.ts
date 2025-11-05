@@ -3,9 +3,9 @@
 // type TypingC2SType = z.infer<typeof TypingC2S>; //TODO: narrow server handler inputs example
 
 import { AppContext } from "../../context";
-import { onJoinRoom } from "./events/room";
+import { SocketType } from "../types";
 
-export const registerEvents = (ctx: AppContext) => {
+export const registerEvents = (ctx: AppContext, socket: SocketType) => {
   // const socket=  ctx.nsp.
   // onJoinRoom(socket);
   // socket.on("disconnect", () => {

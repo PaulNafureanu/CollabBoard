@@ -12,7 +12,6 @@ import {
 import Redis from "ioredis";
 import { roleRoom, roomRoom, userRoom } from "..";
 import { MemberService } from "../../../redis/member";
-import { PresenceService } from "../../../redis/presence";
 import { SocketType } from "../../types";
 
 /**

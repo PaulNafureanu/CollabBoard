@@ -1,7 +1,6 @@
 import type { Role, Status } from "@collabboard/shared";
-import { ALL_ROLES, ALL_STATUSES, type NamespaceType } from "./types";
 import type { AppContext } from "../context";
-import type { BroadcastOperator } from "socket.io";
+import { ALL_ROLES, ALL_STATUSES, type NamespaceType } from "./types";
 
 export const SYS_ROOM = "system:announcements";
 
