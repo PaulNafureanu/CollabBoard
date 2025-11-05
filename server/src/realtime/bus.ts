@@ -1,7 +1,8 @@
-import { Role, Status } from "@collabboard/shared";
-import { AppContext } from "../../context";
-import { ALL_ROLES, ALL_STATUSES, type NamespaceType } from "../types";
-import { registerEvents } from "./events";
+import type { Role, Status } from "@collabboard/shared";
+import { ALL_ROLES, ALL_STATUSES, NamespaceType } from "./types";
+import type { AppContext } from "../context";
+
+export const SYS_ROOM = "system:announcements";
 
 export const userRoom = (userId: number) => `user:${userId}`;
 export const roomRoom = (roomId: number) => `room:${roomId}`;
@@ -9,7 +10,6 @@ export const roleRoom = (roomId: number, role: Role) =>
   `role:${roomId}:${role}`;
 export const statusRoom = (roomId: number, status: Status) =>
   `status:${roomId}:${status}`;
-export const SYS_ROOM = "system:announcements";
 
 export const rescopeUserRooms = async (
   nsp: NamespaceType,
@@ -39,19 +39,9 @@ export const rescopeUserRooms = async (
   }
 };
 
-export const wireRooms = (ctx: AppContext) => {
-  nsp.on("connection", async (socket) => {
-    const userId = socket.data?.user?.id;
-    if (!Number.isFinite(userId)) {
-      socket.disconnect(true);
-      return;
-    }
-
-    await socket.join(userRoom(userId));
-    await socket.join(SYS_ROOM);
-
-    console.log("[/rooms] connected:", socket.id);
-    registerEvents(nsp, socket, redis);
-    socket.on("error", (err) => console.error("[/rooms] socket error:", err));
-  });
-};
+export const Bus = (ctx: AppContext) => ({
+  toUsers: (ids: number[]) => ctx.nsp.to(ids.map(userRoom)),
+  toRoom: (roomId: number) => ctx.nsp.to(roomRoom(roomId)),
+  toRoles: (roomId: number, roles: Role[]) =>
+    ctx.nsp.to(roles.map((r) => roleRoom(roomId, r))),
+});

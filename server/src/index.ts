@@ -9,10 +9,11 @@ import type {
   ClientToServerEvents,
   ServerToClientEvents,
 } from "@collabboard/shared";
+import { createAdapter } from "@socket.io/redis-adapter";
 import helmet from "helmet";
+import { buildContext } from "./context";
 import { errorHandler, jsonParseGuard } from "./middleware/errors";
 import { wireRealtime } from "./realtime";
-import { setIO } from "./realtime/io";
 import type { ServerSideEvents, SocketDataSchema } from "./realtime/types";
 import { boards } from "./routes/boards";
 import { boardStates } from "./routes/boardStates";
@@ -24,7 +25,6 @@ import { rooms } from "./routes/rooms";
 import { users } from "./routes/users";
 import { version } from "./routes/version";
 import { strToArray } from "./utils/stringUtils";
-import { createAdapter } from "@socket.io/redis-adapter";
 
 const app = express();
 
@@ -72,8 +72,6 @@ const io = new IOServer<
   },
 });
 
-setIO(io);
-
 const redisURL = process.env.REDIS_URL ?? "redis://localhost:6379";
 
 const redisData = new Redis(redisURL);
@@ -91,7 +89,9 @@ redisData.on("error", (err) =>
 );
 
 io.adapter(createAdapter(pub, sub));
-wireRealtime(io, redisData);
+const ctx = buildContext(io, redisData);
+app.locals.ctx = ctx;
+wireRealtime(ctx);
 
 const PORT = Number(process.env.PORT ?? 3000);
 server.listen(PORT, () => {

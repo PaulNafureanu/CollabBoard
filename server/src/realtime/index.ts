@@ -1,8 +1,6 @@
-import type Redis from "ioredis";
+import type { AppContext } from "../context";
 import { wireRooms } from "./rooms";
-import type { ServerType } from "./types";
 
-export const wireRealtime = (io: ServerType, redis: Redis) => {
-  const nsp = io.of("/rooms");
-  wireRooms(nsp, redis);
+export const wireRealtime = (ctx: AppContext) => {
+  wireRooms(ctx);
 };
