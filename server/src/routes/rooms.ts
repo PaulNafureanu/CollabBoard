@@ -1,11 +1,5 @@
 import { Router } from "express";
-import {
-  getPageData,
-  PublicBoard,
-  PublicMembership,
-  PublicMessage,
-  PublicRoom,
-} from "../common/publicShapes";
+import { getPageData, PublicBoard, PublicMembership, PublicMessage, PublicRoom } from "../common/publicShapes";
 import { createBoard } from "../common/routeUtils";
 import { prisma } from "../db/prisma";
 import { Rooms, Common } from "@collabboard/shared";
@@ -140,8 +134,7 @@ rooms.patch("/:id", async (req, res, next) => {
     const { name, activeBoardStateId } = UpdateBody.parse(req.body);
     const data: any = {};
     if (name !== undefined) data.name = name;
-    if (activeBoardStateId !== undefined)
-      data.activeBoardStateId = activeBoardStateId;
+    if (activeBoardStateId !== undefined) data.activeBoardStateId = activeBoardStateId;
 
     const room = await prisma.room.update({
       where: { id },

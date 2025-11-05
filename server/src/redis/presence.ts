@@ -16,8 +16,7 @@ export class PresenceService {
   }
 
   private static keyOnline = (roomId: number) => `room:${roomId}:online`;
-  private static keyConns = (roomId: number, userId: number) =>
-    `room:${roomId}:conns:${userId}`;
+  private static keyConns = (roomId: number, userId: number) => `room:${roomId}:conns:${userId}`;
 
   async addUserConnection(roomId: number, userId: number, socketId: string) {
     const keyConns = PresenceService.keyConns(roomId, userId);
@@ -26,27 +25,15 @@ export class PresenceService {
     await this.r.multi().sadd(keyConns, socketId).sadd(keyOnline, usrId).exec();
   }
 
-  async removeUserConnection(
-    roomId: number,
-    userId: number,
-    socketId: string,
-  ): Promise<number> {
+  async removeUserConnection(roomId: number, userId: number, socketId: string): Promise<number> {
     const keyConns = PresenceService.keyConns(roomId, userId);
     const keyOnline = PresenceService.keyOnline(roomId);
     const usrId = String(userId);
 
-    return (await (this.r as any).disconnectUser(
-      keyConns,
-      keyOnline,
-      socketId,
-      usrId,
-    )) as number;
+    return (await (this.r as any).disconnectUser(keyConns, keyOnline, socketId, usrId)) as number;
   }
 
-  async getUserConnectionCounter(
-    roomId: number,
-    userId: number,
-  ): Promise<number> {
+  async getUserConnectionCounter(roomId: number, userId: number): Promise<number> {
     const keyConns = PresenceService.keyConns(roomId, userId);
     return await this.r.scard(keyConns);
   }

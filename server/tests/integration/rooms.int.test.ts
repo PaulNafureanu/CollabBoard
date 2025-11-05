@@ -38,9 +38,7 @@ describe("GET /rooms/:id/memberships", () => {
       data: { userId: u2.id, roomId: room.id },
     });
 
-    const res = await request(app)
-      .get(`/rooms/${room.id}/memberships?page=0&size=10`)
-      .expect(200);
+    const res = await request(app).get(`/rooms/${room.id}/memberships?page=0&size=10`).expect(200);
 
     expect(res.body).toEqual(
       expect.objectContaining({
@@ -73,9 +71,7 @@ describe("GET /rooms/:id/memberships", () => {
 
   it("400 on invalid pagination", async () => {
     const room = await prisma.room.create({ data: {} });
-    await request(app)
-      .get(`/rooms/${room.id}/memberships?page=0&size=0`)
-      .expect(400);
+    await request(app).get(`/rooms/${room.id}/memberships?page=0&size=0`).expect(400);
   });
 });
 
@@ -93,9 +89,7 @@ describe("GET /rooms/:id/messages", () => {
       data: { roomId: room.id, userId: u.id, author: "Paul", text: "b" },
     });
 
-    const res = await request(app)
-      .get(`/rooms/${room.id}/messages?page=0&size=10`)
-      .expect(200);
+    const res = await request(app).get(`/rooms/${room.id}/messages?page=0&size=10`).expect(200);
 
     expect(res.body.totalItems).toBe(2);
     expect(res.body.items.map((m: any) => m.id)).toEqual([msg2.id, msg1.id]);
@@ -122,9 +116,7 @@ describe("GET /rooms/:id/boards", () => {
     // touch b1 to ensure updatedAt diff if needed
     const b2 = await prisma.board.create({ data: { roomId: room.id } });
 
-    const res = await request(app)
-      .get(`/rooms/${room.id}/boards?page=0&size=10`)
-      .expect(200);
+    const res = await request(app).get(`/rooms/${room.id}/boards?page=0&size=10`).expect(200);
 
     expect(res.body.totalItems).toBe(2);
     // newer board first
@@ -145,10 +137,7 @@ describe("GET /rooms/:id/boards", () => {
 
 describe("POST /rooms", () => {
   it("creates room with explicit slug, and creates initial board + boardstate + sets activeBoardStateId", async () => {
-    const res = await request(app)
-      .post("/rooms")
-      .send({ slug: "alpha" })
-      .expect(201);
+    const res = await request(app).post("/rooms").send({ slug: "alpha" }).expect(201);
 
     expect(res.headers.location).toMatch(/^\/rooms\/\d+$/);
     const id = res.body.id;
@@ -196,11 +185,7 @@ describe("POST /rooms", () => {
   });
 
   it("400 on malformed JSON (requires jsonParseGuard)", async () => {
-    await request(app)
-      .post("/rooms")
-      .set("Content-Type", "application/json")
-      .send('{"slug":"oops",}')
-      .expect(400);
+    await request(app).post("/rooms").set("Content-Type", "application/json").send('{"slug":"oops",}').expect(400);
   });
 });
 
@@ -208,10 +193,7 @@ describe("PATCH /rooms/:id", () => {
   it("updates slug", async () => {
     const room = await prisma.room.create({ data: { slug: "before" } });
 
-    const res = await request(app)
-      .patch(`/rooms/${room.id}`)
-      .send({ slug: "after" })
-      .expect(200);
+    const res = await request(app).patch(`/rooms/${room.id}`).send({ slug: "after" }).expect(200);
 
     expect(res.body.slug).toBe("after");
     const db = await prisma.room.findUnique({ where: { id: room.id } });
@@ -220,10 +202,7 @@ describe("PATCH /rooms/:id", () => {
 
   it("updates activeBoardStateId to another existing state", async () => {
     // create a room via route so it has initial board + state + active set
-    const created = await request(app)
-      .post("/rooms")
-      .send({ slug: "switchable" })
-      .expect(201);
+    const created = await request(app).post("/rooms").send({ slug: "switchable" }).expect(201);
     const roomId = created.body.id;
     const initialActive = created.body.activeBoardStateId;
 
@@ -234,10 +213,7 @@ describe("PATCH /rooms/:id", () => {
     });
 
     // patch to switch active state
-    const res = await request(app)
-      .patch(`/rooms/${roomId}`)
-      .send({ activeBoardStateId: state2.id })
-      .expect(200);
+    const res = await request(app).patch(`/rooms/${roomId}`).send({ activeBoardStateId: state2.id }).expect(200);
 
     expect(res.body.activeBoardStateId).toBe(state2.id);
     expect(res.body.activeBoardStateId).not.toBe(initialActive);
@@ -250,10 +226,7 @@ describe("PATCH /rooms/:id", () => {
     const r1 = await prisma.room.create({ data: { slug: "one" } });
     const r2 = await prisma.room.create({ data: { slug: "two" } });
 
-    await request(app)
-      .patch(`/rooms/${r2.id}`)
-      .send({ slug: "one" })
-      .expect(409);
+    await request(app).patch(`/rooms/${r2.id}`).send({ slug: "one" }).expect(409);
   });
 
   it("400 on empty body (UpdateBody refine)", async () => {
@@ -269,10 +242,7 @@ describe("PATCH /rooms/:id", () => {
 describe("DELETE /rooms/:id", () => {
   it("cascades memberships, messages, boards, and boardstates", async () => {
     // make a room with initial board/state via route (so active is set)
-    const created = await request(app)
-      .post("/rooms")
-      .send({ slug: "to-delete" })
-      .expect(201);
+    const created = await request(app).post("/rooms").send({ slug: "to-delete" }).expect(201);
     const roomId = created.body.id;
 
     const user = await prisma.user.create({

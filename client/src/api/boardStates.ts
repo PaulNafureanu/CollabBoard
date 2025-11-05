@@ -1,8 +1,5 @@
 import { http } from "./http";
-import type {
-  CreateBoardStateBody,
-  PublicBoardState,
-} from "@collabboard/shared";
+import type { CreateBoardStateBody, PublicBoardState } from "@collabboard/shared";
 import { BoardStates, Common } from "@collabboard/shared";
 
 const { CreateBody } = BoardStates.default;

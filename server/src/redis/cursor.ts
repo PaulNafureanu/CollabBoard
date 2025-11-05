@@ -29,8 +29,7 @@ export class CursorService {
     const y = Number(value.y);
     const at = Number(value.at);
 
-    if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(at))
-      return null;
+    if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(at)) return null;
 
     return {
       roomId,
@@ -41,17 +40,12 @@ export class CursorService {
     } as CursorMoveType;
   }
 
-  async getMany(
-    roomId: number,
-    userIds: number[],
-  ): Promise<(CursorMoveType | null)[]> {
+  async getMany(roomId: number, userIds: number[]): Promise<(CursorMoveType | null)[]> {
     if (userIds.length === 0) return [];
     const pipe = this.r.pipeline();
     const keys = userIds.map((u) => CursorService.key(roomId, u));
     keys.forEach((k) => pipe.hgetall(k));
-    const results = ((await pipe.exec()) ?? []) as Array<
-      [Error | null, Record<string, string>]
-    >;
+    const results = ((await pipe.exec()) ?? []) as Array<[Error | null, Record<string, string>]>;
 
     return results.map(([err, value], index) => {
       if (err || !value || Object.keys(value).length === 0) return null;
@@ -59,8 +53,7 @@ export class CursorService {
       const y = Number(value.y);
       const at = Number(value.at);
 
-      if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(at))
-        return null;
+      if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(at)) return null;
 
       return { roomId, userId: userIds[index], x, y, at } as CursorMoveType;
     });

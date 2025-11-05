@@ -5,10 +5,7 @@ import http from "http";
 import Redis from "ioredis";
 import { Server as IOServer } from "socket.io";
 
-import type {
-  ClientToServerEvents,
-  ServerToClientEvents,
-} from "@collabboard/shared";
+import type { ClientToServerEvents, ServerToClientEvents } from "@collabboard/shared";
 import { createAdapter } from "@socket.io/redis-adapter";
 import helmet from "helmet";
 import { buildContext } from "./context";
@@ -54,16 +51,9 @@ app.use(errorHandler);
 // HTTP server and attach Socket.IO to it
 const server = http.createServer(app);
 
-const clientOrigins = strToArray(
-  process.env.CLIENT_ORIGIN ?? "http://localhost:5173",
-);
+const clientOrigins = strToArray(process.env.CLIENT_ORIGIN ?? "http://localhost:5173");
 
-const io = new IOServer<
-  ClientToServerEvents,
-  ServerToClientEvents,
-  ServerSideEvents,
-  SocketDataSchema
->(server, {
+const io = new IOServer<ClientToServerEvents, ServerToClientEvents, ServerSideEvents, SocketDataSchema>(server, {
   path: "/socket.io",
   cors: {
     origin: clientOrigins,
@@ -84,9 +74,7 @@ redisData.on("connect", () => console.log("[redis:data] connected"));
 
 pub.on("error", (err) => console.error("[redis:pub] error: ", err.message));
 sub.on("error", (err) => console.error("[redis:sub] error: ", err.message));
-redisData.on("error", (err) =>
-  console.error("[redis:data] error: ", err.message),
-);
+redisData.on("error", (err) => console.error("[redis:data] error: ", err.message));
 
 io.adapter(createAdapter(pub, sub));
 const ctx = buildContext(io, redisData);

@@ -30,11 +30,7 @@ export class RedisLock {
     return n === 1;
   }
 
-  async tryAcquireWithRetry(
-    key: string,
-    token: string,
-    ms = 1000,
-  ): Promise<boolean> {
+  async tryAcquireWithRetry(key: string, token: string, ms = 1000): Promise<boolean> {
     if (ms <= 0) return this.acquireLock(key, token);
     const start = Date.now();
     while (Date.now() - start < ms) {

@@ -14,12 +14,7 @@ type ErrBody = {
 };
 
 // Optional: handle malformed JSON produced by express.json()
-export function jsonParseGuard(
-  err: any,
-  _req: Request,
-  res: Response,
-  next: NextFunction,
-) {
+export function jsonParseGuard(err: any, _req: Request, res: Response, next: NextFunction) {
   if (err?.type === "entity.parse.failed") {
     const body: ErrBody = {
       error: {
@@ -33,12 +28,7 @@ export function jsonParseGuard(
   return next(err);
 }
 
-export function errorHandler(
-  err: unknown,
-  _req: Request,
-  res: Response,
-  _next: NextFunction,
-) {
+export function errorHandler(err: unknown, _req: Request, res: Response, _next: NextFunction) {
   if (process.env.NODE_ENV !== "test") console.error(err);
 
   const isDev = process.env.NODE_ENV !== "production";

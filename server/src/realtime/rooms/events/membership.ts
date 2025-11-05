@@ -53,10 +53,7 @@ export async function emitJoinRequest(
     at,
   };
 
-  const rooms = [
-    roleRoom(roomId, Role.OWNER),
-    roleRoom(roomId, Role.MODERATOR),
-  ];
+  const rooms = [roleRoom(roomId, Role.OWNER), roleRoom(roomId, Role.MODERATOR)];
   socket.nsp.to(rooms).emit("join_request", payload);
 }
 
@@ -69,10 +66,7 @@ export function emitJoinPending(socket: SocketType, roomId: number) {
 }
 
 // Mods PATCH -> /membership status accepted -> join_approved to user
-export async function emitJoinApproved(
-  socket: SocketType,
-  dbMembership: PublicMembership,
-) {
+export async function emitJoinApproved(socket: SocketType, dbMembership: PublicMembership) {
   const { roomId, userId } = dbMembership;
   const room = userRoom(userId);
 
@@ -81,11 +75,7 @@ export async function emitJoinApproved(
 }
 
 // Mods PATCH -> /membership status accepted -> user_joined to the room
-export function emitUserJoined(
-  socket: SocketType,
-  dbMembership: PublicMembership,
-  dbExtra: { username: string },
-) {
+export function emitUserJoined(socket: SocketType, dbMembership: PublicMembership, dbExtra: { username: string }) {
   const { roomId, id, userId, role, status } = dbMembership;
   const { username } = dbExtra;
 
@@ -104,12 +94,7 @@ export function emitUserJoined(
   socket.to(room).emit("user_joined", payload);
 }
 
-export function emitJoinDenied(
-  socket: SocketType,
-  roomId: number,
-  at: Date,
-  reason?: string,
-) {
+export function emitJoinDenied(socket: SocketType, roomId: number, at: Date, reason?: string) {
   const room = userRoom(socket.data.user.id);
   const payload: JoinDeniedType = { roomId, reason, at: at.getTime() };
   socket.nsp.in(room).emit("join_denied", payload);

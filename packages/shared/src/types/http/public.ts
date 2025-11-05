@@ -74,10 +74,4 @@ export type PublicBoardState = {
   createdAt: Date;
 };
 
-export type PublicShapes =
-  | PublicUser
-  | PublicRoom
-  | PublicBoard
-  | PublicBoardState
-  | PublicMembership
-  | PublicMessage;
+export type PublicShapes = PublicUser | PublicRoom | PublicBoard | PublicBoardState | PublicMembership | PublicMessage;

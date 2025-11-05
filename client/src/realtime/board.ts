@@ -1,9 +1,4 @@
-import type {
-  BoardPatchType,
-  JsonPathType,
-  JsonType,
-  ReSyncBoardStateType,
-} from "@collabboard/shared";
+import type { BoardPatchType, JsonPathType, JsonType, ReSyncBoardStateType } from "@collabboard/shared";
 import { getSocket } from "./socket";
 
 export function emitBoardPatch(

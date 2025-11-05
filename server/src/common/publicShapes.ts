@@ -10,12 +10,7 @@ export interface PageData<T extends Object> {
   hasPrev: boolean;
 }
 
-export const getPageData = <T extends Object>(
-  items: T[],
-  page: number,
-  size: number,
-  totalItems: number,
-) => {
+export const getPageData = <T extends Object>(items: T[], page: number, size: number, totalItems: number) => {
   const totalPages = Math.max(1, Math.ceil(totalItems / size));
   return {
     items,

@@ -48,9 +48,7 @@ describe("GET /users/:id/memberships", () => {
       data: { userId: user.id, roomId: r2.id },
     });
 
-    const res = await request(app)
-      .get(`/users/${user.id}/memberships?page=0&size=10`)
-      .expect(200);
+    const res = await request(app).get(`/users/${user.id}/memberships?page=0&size=10`).expect(200);
 
     expect(res.body).toEqual(
       expect.objectContaining({
@@ -129,17 +127,11 @@ describe("POST /users", () => {
       .send({ username: "taken", email: "new@z.com", password: "p12345678" })
       .expect(409);
 
-    await request(app)
-      .post("/users")
-      .send({ username: "new", email: "X@Y.com", password: "p12345678" })
-      .expect(409);
+    await request(app).post("/users").send({ username: "new", email: "X@Y.com", password: "p12345678" }).expect(409);
   });
 
   it("400 on bad named payload (missing password)", async () => {
-    await request(app)
-      .post("/users")
-      .send({ username: "NoPw", email: "a@b.com" })
-      .expect(400);
+    await request(app).post("/users").send({ username: "NoPw", email: "a@b.com" }).expect(400);
   });
 
   it("400 on malformed JSON (requires jsonParseGuard mounted)", async () => {
@@ -195,10 +187,7 @@ describe("PATCH /users/:id", () => {
       },
     });
 
-    await request(app)
-      .patch(`/users/${u2.id}`)
-      .send({ username: "first" })
-      .expect(409);
+    await request(app).patch(`/users/${u2.id}`).send({ username: "first" }).expect(409);
     // also verify no partial changes persisted
     const still = await prisma.user.findUnique({ where: { id: u2.id } });
     expect(still?.username).toBe("second");
@@ -225,9 +214,7 @@ describe("DELETE /users/:id", () => {
 
     await request(app).delete(`/users/${user.id}`).expect(204);
 
-    expect(await prisma.membership.count({ where: { userId: user.id } })).toBe(
-      0,
-    );
+    expect(await prisma.membership.count({ where: { userId: user.id } })).toBe(0);
 
     const msgDb = await prisma.message.findUnique({ where: { id: msg.id } });
     expect(msgDb).toBeTruthy();

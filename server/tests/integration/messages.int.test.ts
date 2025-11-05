@@ -64,41 +64,26 @@ describe("POST /messages", () => {
       data: { username: "Moody", isAnonymous: false },
     });
 
-    const res = await request(app)
-      .post("/messages")
-      .send({ roomId: room.id, userId: user.id, text: "hi" })
-      .expect(201);
+    const res = await request(app).post("/messages").send({ roomId: room.id, userId: user.id, text: "hi" }).expect(201);
 
     expect(res.body.author).toBe("Moody");
   });
 
   it("409 on FK violation (nonexistent room or user)", async () => {
     const user = await prisma.user.create({ data: {} });
-    await request(app)
-      .post("/messages")
-      .send({ roomId: 999999, userId: user.id, text: "x" })
-      .expect(409);
+    await request(app).post("/messages").send({ roomId: 999999, userId: user.id, text: "x" }).expect(409);
 
     const room = await prisma.room.create({ data: {} });
-    await request(app)
-      .post("/messages")
-      .send({ roomId: room.id, userId: 999999, text: "x" })
-      .expect(404); // findFirstOrThrow on user triggers 404 before create
+    await request(app).post("/messages").send({ roomId: room.id, userId: 999999, text: "x" }).expect(404); // findFirstOrThrow on user triggers 404 before create
   });
 
   it("400 on invalid body (missing/empty text)", async () => {
     const room = await prisma.room.create({ data: {} });
     const user = await prisma.user.create({ data: {} });
 
-    await request(app)
-      .post("/messages")
-      .send({ roomId: room.id, userId: user.id })
-      .expect(400);
+    await request(app).post("/messages").send({ roomId: room.id, userId: user.id }).expect(400);
 
-    await request(app)
-      .post("/messages")
-      .send({ roomId: room.id, userId: user.id, text: "   " })
-      .expect(400);
+    await request(app).post("/messages").send({ roomId: room.id, userId: user.id, text: "   " }).expect(400);
   });
 
   it("400 on malformed JSON (if jsonParseGuard is mounted)", async () => {
@@ -126,10 +111,7 @@ describe("PATCH /messages/:id", () => {
       },
     });
 
-    const res = await request(app)
-      .patch(`/messages/${msg.id}`)
-      .send({ text: "after" })
-      .expect(200);
+    const res = await request(app).patch(`/messages/${msg.id}`).send({ text: "after" }).expect(200);
 
     expect(res.body.text).toBe("after");
     const db = await prisma.message.findUnique({ where: { id: msg.id } });
@@ -149,17 +131,11 @@ describe("PATCH /messages/:id", () => {
     });
 
     await request(app).patch(`/messages/${msg.id}`).send({}).expect(400);
-    await request(app)
-      .patch(`/messages/${msg.id}`)
-      .send({ text: "   " })
-      .expect(400);
+    await request(app).patch(`/messages/${msg.id}`).send({ text: "   " }).expect(400);
   });
 
   it("404 when message not found", async () => {
-    await request(app)
-      .patch(`/messages/999999`)
-      .send({ text: "x" })
-      .expect(404);
+    await request(app).patch(`/messages/999999`).send({ text: "x" }).expect(404);
   });
 
   it("400 on malformed JSON (if jsonParseGuard is mounted)", async () => {

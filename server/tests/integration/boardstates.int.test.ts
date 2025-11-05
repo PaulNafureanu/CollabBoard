@@ -7,10 +7,7 @@ const app = makeApp();
 describe("GET /boardstates/:id", () => {
   it("returns PublicBoardState", async () => {
     const room = await prisma.room.create({ data: {} });
-    const bRes = await request(app)
-      .post("/boards")
-      .send({ roomId: room.id })
-      .expect(201);
+    const bRes = await request(app).post("/boards").send({ roomId: room.id }).expect(201);
     const boardId = bRes.body.id;
 
     const sRes = await request(app)
@@ -42,10 +39,7 @@ describe("POST /boardstates", () => {
     const room = await prisma.room.create({ data: {} });
 
     // create initial board via route (creates v1 and sets room.active)
-    const bRes = await request(app)
-      .post("/boards")
-      .send({ roomId: room.id })
-      .expect(201);
+    const bRes = await request(app).post("/boards").send({ roomId: room.id }).expect(201);
     const boardId = bRes.body.id;
 
     const beforeBoard = await prisma.board.findUnique({
@@ -87,10 +81,7 @@ describe("POST /boardstates", () => {
 
   it("400 on malformed JSON (if jsonParseGuard is mounted)", async () => {
     const room = await prisma.room.create({ data: {} });
-    const bRes = await request(app)
-      .post("/boards")
-      .send({ roomId: room.id })
-      .expect(201);
+    const bRes = await request(app).post("/boards").send({ roomId: room.id }).expect(201);
     const boardId = bRes.body.id;
 
     await request(app)
@@ -105,20 +96,14 @@ describe("POST /boardstates", () => {
   });
 
   it("404 when boardId does not exist", async () => {
-    await request(app)
-      .post("/boardstates")
-      .send({ boardId: 999999, version: 2, payload: {} })
-      .expect(404);
+    await request(app).post("/boardstates").send({ boardId: 999999, version: 2, payload: {} }).expect(404);
   });
 });
 
 describe("DELETE /boardstates/:id", () => {
   it("deletes the target and all newer (>= version) states, re-points board.lastState and room active to the previous version", async () => {
     const room = await prisma.room.create({ data: {} });
-    const bRes = await request(app)
-      .post("/boards")
-      .send({ roomId: room.id })
-      .expect(201);
+    const bRes = await request(app).post("/boards").send({ roomId: room.id }).expect(201);
     const boardId = bRes.body.id;
 
     // add v2, v3 via route
@@ -169,10 +154,7 @@ describe("DELETE /boardstates/:id", () => {
 
   it("when deleting v1 and it’s the last state: recreates a fresh v1 with default payload and points board/room to it", async () => {
     const room = await prisma.room.create({ data: {} });
-    const bRes = await request(app)
-      .post("/boards")
-      .send({ roomId: room.id })
-      .expect(201);
+    const bRes = await request(app).post("/boards").send({ roomId: room.id }).expect(201);
     const boardId = bRes.body.id;
 
     // There is only v1 now (created by /boards route)

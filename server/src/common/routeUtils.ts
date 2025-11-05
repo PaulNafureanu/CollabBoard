@@ -1,11 +1,6 @@
 import { inTx } from "../db/inTx";
 import { Prisma } from "../generated/prisma";
-import {
-  DefaultBoardStatePayload,
-  PublicBoard,
-  PublicBoardState,
-  PublicRoom,
-} from "./publicShapes";
+import { DefaultBoardStatePayload, PublicBoard, PublicBoardState, PublicRoom } from "./publicShapes";
 
 // Create a state AND sets it as active in the room
 export const createBoardState = async (
@@ -39,24 +34,14 @@ export const createBoardState = async (
   });
 };
 
-export const createBoard = async (
-  roomId: number,
-  name?: string,
-  tx?: Prisma.TransactionClient,
-) => {
+export const createBoard = async (roomId: number, name?: string, tx?: Prisma.TransactionClient) => {
   return await inTx(tx, async (db) => {
     const board = await db.board.create({
       data: { roomId, name: "" },
       select: PublicBoard,
     });
 
-    const state = await createBoardState(
-      roomId,
-      board.id,
-      1,
-      DefaultBoardStatePayload,
-      db,
-    );
+    const state = await createBoardState(roomId, board.id, 1, DefaultBoardStatePayload, db);
 
     return await db.board.update({
       where: { id: board.id },
@@ -66,11 +51,7 @@ export const createBoard = async (
   });
 };
 
-export const activatePreBoardState = async (
-  roomId: number,
-  boardId: number,
-  tx?: Prisma.TransactionClient,
-) => {
+export const activatePreBoardState = async (roomId: number, boardId: number, tx?: Prisma.TransactionClient) => {
   return await inTx(tx, async (db) => {
     const lastBoard = await db.board.findFirstOrThrow({
       where: { roomId, id: { not: boardId } },
@@ -102,8 +83,7 @@ export const getActivatedRoom = async (
         where: { roomId },
       });
       if (countBoards === 1) await createBoard(roomId, undefined, db);
-      else if (countBoards > 1)
-        await activatePreBoardState(roomId, boardId, db);
+      else if (countBoards > 1) await activatePreBoardState(roomId, boardId, db);
     }
 
     return await db.room.findUniqueOrThrow({

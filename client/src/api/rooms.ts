@@ -1,9 +1,5 @@
 import { http } from "./http";
-import type {
-  CreateRoomBody,
-  PublicRoom,
-  UpdateRoomBody,
-} from "@collabboard/shared";
+import type { CreateRoomBody, PublicRoom, UpdateRoomBody } from "@collabboard/shared";
 import { Rooms, Common } from "@collabboard/shared";
 
 const { CreateBody, UpdateBody } = Rooms.default;

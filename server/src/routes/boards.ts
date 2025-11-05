@@ -1,10 +1,5 @@
 import { Router } from "express";
-import {
-  DefaultBoardStatePayload,
-  getPageData,
-  PublicBoard,
-  PublicBoardState,
-} from "../common/publicShapes";
+import { DefaultBoardStatePayload, getPageData, PublicBoard, PublicBoardState } from "../common/publicShapes";
 import { createBoard, getActivatedRoom } from "../common/routeUtils";
 import { prisma } from "../db/prisma";
 import { Boards, Common } from "@collabboard/shared";

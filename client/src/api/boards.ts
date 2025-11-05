@@ -1,10 +1,5 @@
 import { http } from "./http";
-import type {
-  BoardQueryType,
-  CreateBoardBody,
-  PublicBoard,
-  UpdateBoardBody,
-} from "@collabboard/shared";
+import type { BoardQueryType, CreateBoardBody, PublicBoard, UpdateBoardBody } from "@collabboard/shared";
 import { Boards, Common } from "@collabboard/shared";
 
 const { CreateBody, UpdateBody, BoardQuery } = Boards.default;
@@ -24,11 +19,7 @@ const boardsApi = {
     return res.data;
   },
 
-  update: async (
-    boardId: number,
-    payload: UpdateBoardBody,
-    query: BoardQueryType,
-  ) => {
+  update: async (boardId: number, payload: UpdateBoardBody, query: BoardQueryType) => {
     const id = Id.parse(boardId);
     const p = UpdateBody.parse(payload);
     const q = BoardQuery.parse(query);

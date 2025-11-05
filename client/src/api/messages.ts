@@ -1,9 +1,5 @@
 import { http } from "./http";
-import type {
-  CreateMessageBody,
-  PublicMessage,
-  UpdateMessageBody,
-} from "@collabboard/shared";
+import type { CreateMessageBody, PublicMessage, UpdateMessageBody } from "@collabboard/shared";
 import { Messages, Common } from "@collabboard/shared";
 
 const { CreateBody, UpdateBody } = Messages.default;

@@ -35,10 +35,7 @@ describe("POST /memberships", () => {
     const u = await prisma.user.create({ data: {} });
     const r = await prisma.room.create({ data: {} });
 
-    const res = await request(app)
-      .post("/memberships")
-      .send({ userId: u.id, roomId: r.id })
-      .expect(201);
+    const res = await request(app).post("/memberships").send({ userId: u.id, roomId: r.id }).expect(201);
 
     expect(res.headers.location).toMatch(/^\/memberships\/\d+$/);
     const db = await prisma.membership.findUnique({
@@ -65,26 +62,17 @@ describe("POST /memberships", () => {
     const r = await prisma.room.create({ data: {} });
     await prisma.membership.create({ data: { userId: u.id, roomId: r.id } });
 
-    await request(app)
-      .post("/memberships")
-      .send({ userId: u.id, roomId: r.id })
-      .expect(409);
+    await request(app).post("/memberships").send({ userId: u.id, roomId: r.id }).expect(409);
   });
 
   it("409 on foreign key violation (nonexistent user/room)", async () => {
     // user exists, room doesn't
     const u = await prisma.user.create({ data: {} });
-    await request(app)
-      .post("/memberships")
-      .send({ userId: u.id, roomId: 999999 })
-      .expect(409);
+    await request(app).post("/memberships").send({ userId: u.id, roomId: 999999 }).expect(409);
 
     // room exists, user doesn't
     const r = await prisma.room.create({ data: {} });
-    await request(app)
-      .post("/memberships")
-      .send({ userId: 999999, roomId: r.id })
-      .expect(409);
+    await request(app).post("/memberships").send({ userId: 999999, roomId: r.id }).expect(409);
   });
 
   it("400 on invalid body (missing fields / invalid role)", async () => {
@@ -92,10 +80,7 @@ describe("POST /memberships", () => {
 
     const u = await prisma.user.create({ data: {} });
     const r = await prisma.room.create({ data: {} });
-    await request(app)
-      .post("/memberships")
-      .send({ userId: u.id, roomId: r.id, role: "notarole" })
-      .expect(400);
+    await request(app).post("/memberships").send({ userId: u.id, roomId: r.id, role: "notarole" }).expect(400);
   });
 
   it("400 on malformed JSON (if jsonParseGuard mounted)", async () => {
@@ -117,10 +102,7 @@ describe("PATCH /memberships/:id", () => {
       data: { userId: u.id, roomId: r.id },
     });
 
-    const res = await request(app)
-      .patch(`/memberships/${m.id}`)
-      .send({ role: "owner" })
-      .expect(200);
+    const res = await request(app).patch(`/memberships/${m.id}`).send({ role: "owner" }).expect(200);
 
     expect(res.body.role).toBe("OWNER");
 
@@ -135,17 +117,11 @@ describe("PATCH /memberships/:id", () => {
       data: { userId: u.id, roomId: r.id },
     });
 
-    await request(app)
-      .patch(`/memberships/${m.id}`)
-      .send({ role: "nope" })
-      .expect(400);
+    await request(app).patch(`/memberships/${m.id}`).send({ role: "nope" }).expect(400);
   });
 
   it("404 when membership not found", async () => {
-    await request(app)
-      .patch(`/memberships/999999`)
-      .send({ role: "MODERATOR" })
-      .expect(404);
+    await request(app).patch(`/memberships/999999`).send({ role: "MODERATOR" }).expect(404);
   });
 
   it("400 on malformed JSON (if jsonParseGuard mounted)", async () => {

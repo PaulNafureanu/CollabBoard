@@ -18,16 +18,10 @@ export class MessageService {
   constructor(private r: Redis) {}
 
   private static keyRoom = (roomId: number) => `room:${roomId}:messages`;
-  private static keyUser = (roomId: number, userId: number) =>
-    `room:${roomId}:messages:user:${userId}`;
-  private static keyMsg = (roomId: number, msgId: number) =>
-    `room:${roomId}:message:${msgId}`;
+  private static keyUser = (roomId: number, userId: number) => `room:${roomId}:messages:user:${userId}`;
+  private static keyMsg = (roomId: number, msgId: number) => `room:${roomId}:message:${msgId}`;
 
-  private static parseMsg = (
-    roomId: number,
-    msgId: number,
-    res: Record<string, string>,
-  ): ChatMessageType | null => {
+  private static parseMsg = (roomId: number, msgId: number, res: Record<string, string>): ChatMessageType | null => {
     if (!res || Object.keys(res).length === 0) return null;
 
     const author = res.author?.trim();
@@ -64,16 +58,7 @@ export class MessageService {
     return unique.map(Number).filter(Number.isFinite).slice(0, count);
   };
 
-  async setAll({
-    roomId,
-    id,
-    userId,
-    author,
-    text,
-    deletedById,
-    isEdited,
-    at,
-  }: ChatMessageType) {
+  async setAll({ roomId, id, userId, author, text, deletedById, isEdited, at }: ChatMessageType) {
     if (!userId) return;
     const keyRoom = MessageService.keyRoom(roomId);
     const keyUser = MessageService.keyUser(roomId, userId);
@@ -101,16 +86,7 @@ export class MessageService {
       .exec();
   }
 
-  async setMsg({
-    roomId,
-    id,
-    userId,
-    author,
-    text,
-    deletedById,
-    isEdited,
-    at,
-  }: ChatMessageType) {
+  async setMsg({ roomId, id, userId, author, text, deletedById, isEdited, at }: ChatMessageType) {
     const keyMsg = MessageService.keyMsg(roomId, id);
     const msg = {
       author,
@@ -145,10 +121,7 @@ export class MessageService {
     return MessageService.parseMsg(roomId, msgId, res);
   }
 
-  async getMsgByIds(
-    roomId: number,
-    msgIds: number[],
-  ): Promise<ChatMessageType[]> {
+  async getMsgByIds(roomId: number, msgIds: number[]): Promise<ChatMessageType[]> {
     if (msgIds.length === 0) return [];
     const pipe = this.r.pipeline();
     msgIds.forEach((id) => pipe.hgetall(MessageService.keyMsg(roomId, id)));
@@ -158,11 +131,7 @@ export class MessageService {
       .map(([err, value], index) => {
         const id = msgIds[index];
         if (err || !id) return null;
-        return MessageService.parseMsg(
-          roomId,
-          id,
-          value as Record<string, string>,
-        );
+        return MessageService.parseMsg(roomId, id, value as Record<string, string>);
       })
       .filter((v) => v !== null);
   }

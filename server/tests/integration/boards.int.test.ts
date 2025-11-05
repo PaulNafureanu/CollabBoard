@@ -32,10 +32,7 @@ describe("GET /boards/:id/boardstates", () => {
     const room = await prisma.room.create({ data: {} });
 
     // Create a board via route to ensure initial state + active set
-    const created = await request(app)
-      .post("/boards")
-      .send({ roomId: room.id })
-      .expect(201);
+    const created = await request(app).post("/boards").send({ roomId: room.id }).expect(201);
     const boardId = created.body.id;
 
     // Add two more states with versions 2 and 3
@@ -51,9 +48,7 @@ describe("GET /boards/:id/boardstates", () => {
       data: { lastState: s3.id },
     });
 
-    const res = await request(app)
-      .get(`/boards/${boardId}/boardstates?page=0&size=10`)
-      .expect(200);
+    const res = await request(app).get(`/boards/${boardId}/boardstates?page=0&size=10`).expect(200);
 
     expect(res.body.totalItems).toBe(3);
     // order: v3, v2, v1
@@ -75,9 +70,7 @@ describe("GET /boards/:id/boardstates", () => {
   it("400 on invalid pagination", async () => {
     const room = await prisma.room.create({ data: {} });
     const b = await prisma.board.create({ data: { roomId: room.id } });
-    await request(app)
-      .get(`/boards/${b.id}/boardstates?page=0&size=0`)
-      .expect(400);
+    await request(app).get(`/boards/${b.id}/boardstates?page=0&size=0`).expect(400);
   });
 });
 
@@ -85,10 +78,7 @@ describe("POST /boards", () => {
   it("creates a board for a room, adds initial state (v1), sets board.lastState, and makes it active for the room", async () => {
     const room = await prisma.room.create({ data: {} });
 
-    const res = await request(app)
-      .post("/boards")
-      .send({ roomId: room.id })
-      .expect(201);
+    const res = await request(app).post("/boards").send({ roomId: room.id }).expect(201);
     expect(res.headers.location).toMatch(/^\/boards\/\d+$/);
 
     const boardId = res.body.id;
@@ -134,17 +124,11 @@ describe("PATCH /boards/:id (move/copy)", () => {
     const senderRoomId = senderCreated.body.roomId;
 
     // Make sender have a second board too, so getActivatedRoom can pick previous if needed
-    const extraBoard = await request(app)
-      .post("/boards")
-      .send({ roomId: senderRoomId })
-      .expect(201);
+    const extraBoard = await request(app).post("/boards").send({ roomId: senderRoomId }).expect(201);
 
     // Receiver room with at least one board
     const receiverRoom = await prisma.room.create({ data: {} });
-    await request(app)
-      .post("/boards")
-      .send({ roomId: receiverRoom.id })
-      .expect(201);
+    await request(app).post("/boards").send({ roomId: receiverRoom.id }).expect(201);
 
     // Capture sender's active before move
     const beforeSender = await prisma.room.findUnique({
@@ -191,10 +175,7 @@ describe("PATCH /boards/:id (move/copy)", () => {
   it("copies a board into another room; new board with cloned states; receiver active becomes the new board's last state; original untouched", async () => {
     // Original room with a multi-state board
     const originRoom = await prisma.room.create({ data: {} });
-    const originRes = await request(app)
-      .post("/boards")
-      .send({ roomId: originRoom.id })
-      .expect(201);
+    const originRes = await request(app).post("/boards").send({ roomId: originRoom.id }).expect(201);
     const originBoardId = originRes.body.id;
 
     // Add two more versions 2,3 to the origin board
@@ -211,10 +192,7 @@ describe("PATCH /boards/:id (move/copy)", () => {
 
     // Receiver room with some content already
     const receiverRoom = await prisma.room.create({ data: {} });
-    const receiverInitial = await request(app)
-      .post("/boards")
-      .send({ roomId: receiverRoom.id })
-      .expect(201);
+    const receiverInitial = await request(app).post("/boards").send({ roomId: receiverRoom.id }).expect(201);
 
     const res = await request(app)
       .patch(`/boards/${originBoardId}`)
@@ -237,9 +215,7 @@ describe("PATCH /boards/:id (move/copy)", () => {
     const receiverDb = await prisma.room.findUnique({
       where: { id: receiverRoom.id },
     });
-    expect(receiverDb!.activeBoardStateId).toBe(
-      newStates[newStates.length - 1].id,
-    );
+    expect(receiverDb!.activeBoardStateId).toBe(newStates[newStates.length - 1].id);
 
     // Original board remains in original room with its lastState unchanged
     const originBoard = await prisma.board.findUnique({
@@ -251,20 +227,13 @@ describe("PATCH /boards/:id (move/copy)", () => {
 
   it("400 on missing roomId (Zod)", async () => {
     const room = await prisma.room.create({ data: {} });
-    const b = await request(app)
-      .post("/boards")
-      .send({ roomId: room.id })
-      .expect(201);
+    const b = await request(app).post("/boards").send({ roomId: room.id }).expect(201);
     await request(app).patch(`/boards/${b.body.id}`).send({}).expect(400);
   });
 
   it("404 when board not found", async () => {
     const receiver = await prisma.room.create({ data: {} });
-    await request(app)
-      .patch(`/boards/999999`)
-      .query({ copy: false })
-      .send({ roomId: receiver.id })
-      .expect(404);
+    await request(app).patch(`/boards/999999`).query({ copy: false }).send({ roomId: receiver.id }).expect(404);
   });
 });
 
@@ -273,10 +242,7 @@ describe("DELETE /boards/:id", () => {
     const room = await prisma.room.create({ data: {} });
 
     // Create exactly one board via route => board + state v1 + room.active set
-    const only = await request(app)
-      .post("/boards")
-      .send({ roomId: room.id })
-      .expect(201);
+    const only = await request(app).post("/boards").send({ roomId: room.id }).expect(201);
     const onlyBoardId = only.body.id;
 
     // Delete it
@@ -301,17 +267,11 @@ describe("DELETE /boards/:id", () => {
     const room = await prisma.room.create({ data: {} });
 
     // Create b1 (active on room)
-    const b1 = await request(app)
-      .post("/boards")
-      .send({ roomId: room.id })
-      .expect(201);
+    const b1 = await request(app).post("/boards").send({ roomId: room.id }).expect(201);
     const b1Id = b1.body.id;
 
     // Create b2 (this will become active)
-    const b2 = await request(app)
-      .post("/boards")
-      .send({ roomId: room.id })
-      .expect(201);
+    const b2 = await request(app).post("/boards").send({ roomId: room.id }).expect(201);
     const b2Id = b2.body.id;
 
     // Delete b2 (currently active)

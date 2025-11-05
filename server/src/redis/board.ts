@@ -1,9 +1,5 @@
 import type Redis from "ioredis";
-import {
-  applyPatchToPayload,
-  type BoardPatchType,
-  type JsonType,
-} from "@collabboard/shared";
+import { applyPatchToPayload, type BoardPatchType, type JsonType } from "@collabboard/shared";
 import { RedisLock } from "./lock";
 
 /**
@@ -57,8 +53,7 @@ export class BoardStateService {
 
   private static keyMeta = (roomId: number) => `room:${roomId}:board:meta`;
   private static keyState = (roomId: number) => `room:${roomId}:board:state`;
-  private static keyPayload = (roomId: number) =>
-    `room:${roomId}:board:payload`;
+  private static keyPayload = (roomId: number) => `room:${roomId}:board:payload`;
   private static keyStream = (roomId: number) => `room:${roomId}:board:stream`;
   private static keyLock = (roomId: number) => `room:${roomId}:board:lock`;
 
@@ -66,14 +61,7 @@ export class BoardStateService {
    * After db persistence or after switching active board / board states,
    * there is a need to update or set a new board state.
    */
-  async setActive({
-    roomId,
-    boardStateId,
-    boardId,
-    boardName,
-    version,
-    payload,
-  }: ActiveBoardState) {
+  async setActive({ roomId, boardStateId, boardId, boardName, version, payload }: ActiveBoardState) {
     const keyMeta = BoardStateService.keyMeta(roomId);
     const keyState = BoardStateService.keyState(roomId);
     const keyPayload = BoardStateService.keyPayload(roomId);
@@ -135,8 +123,7 @@ export class BoardStateService {
     patch,
     at,
   }: BoardPatchType): Promise<
-    | { ok: true; newRt: number }
-    | { ok: false; reason: PATCH_CONFLICT_REASONS; serverRt: number }
+    { ok: true; newRt: number } | { ok: false; reason: PATCH_CONFLICT_REASONS; serverRt: number }
   > {
     const keyState = BoardStateService.keyState(roomId);
     const keyPayload = BoardStateService.keyPayload(roomId);
@@ -239,8 +226,7 @@ export class BoardStateService {
     const boardId = Number(res.boardId);
     const boardName = res.boardName;
 
-    if (!Number.isFinite(id) || !Number.isFinite(boardId) || !boardName)
-      return null;
+    if (!Number.isFinite(id) || !Number.isFinite(boardId) || !boardName) return null;
 
     const metadata: MetaData = { id, boardId, boardName };
     return metadata;
@@ -255,12 +241,7 @@ export class BoardStateService {
     const rtVersion = Number(res.rtVersion);
     const dbVersion = Number(res.dbVersion);
 
-    if (
-      !Number.isFinite(id) ||
-      !Number.isFinite(rtVersion) ||
-      !Number.isFinite(dbVersion)
-    )
-      return null;
+    if (!Number.isFinite(id) || !Number.isFinite(rtVersion) || !Number.isFinite(dbVersion)) return null;
 
     const statedata: StateData = { id, rtVersion, dbVersion };
     return statedata;
@@ -273,19 +254,14 @@ export class BoardStateService {
     return JSON.parse(res);
   }
 
-  async streamSince(
-    roomId: number,
-    fromRt: number,
-    limit = 500,
-  ): Promise<PatchEntry[]> {
+  async streamSince(roomId: number, fromRt: number, limit = 500): Promise<PatchEntry[]> {
     const key = BoardStateService.keyStream(roomId);
     const entries = await this.r.xrange(key, "-", "+");
     const out: PatchEntry[] = [];
 
     for (const [, kv] of entries) {
       const map: Record<string, string> = {};
-      for (let i = 0; i < kv.length; i += 2)
-        map[kv[i] as string] = kv[i + 1] as string;
+      for (let i = 0; i < kv.length; i += 2) map[kv[i] as string] = kv[i + 1] as string;
 
       const v = Number(map.v);
       if (!Number.isFinite(v) || v < fromRt) continue;

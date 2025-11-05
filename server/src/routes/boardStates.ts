@@ -1,9 +1,5 @@
 import { Router } from "express";
-import {
-  DefaultBoardStatePayload,
-  PublicBoard,
-  PublicBoardState,
-} from "../common/publicShapes";
+import { DefaultBoardStatePayload, PublicBoard, PublicBoardState } from "../common/publicShapes";
 import { createBoardState } from "../common/routeUtils";
 import { prisma } from "../db/prisma";
 import { BoardStates, Common } from "@collabboard/shared";

@@ -1,9 +1,5 @@
 import { http } from "./http";
-import type {
-  CreateUserBody,
-  PublicUser,
-  UpdateUserBody,
-} from "@collabboard/shared";
+import type { CreateUserBody, PublicUser, UpdateUserBody } from "@collabboard/shared";
 import { Users, Common } from "@collabboard/shared";
 
 const { CreateBody, UpdateBody } = Users.default;

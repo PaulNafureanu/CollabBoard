@@ -10,12 +10,7 @@ export function onCursorMove(handler: (p: CursorMoveType) => void) {
 let rafId: number | null = null;
 let lastPayload: Omit<CursorMoveType, "at"> | null = null;
 
-export function emitCursorMove(
-  roomId: number,
-  userId: number,
-  x: number,
-  y: number,
-) {
+export function emitCursorMove(roomId: number, userId: number, x: number, y: number) {
   lastPayload = { roomId, userId, x, y };
   if (rafId) return;
   rafId = requestAnimationFrame(() => {

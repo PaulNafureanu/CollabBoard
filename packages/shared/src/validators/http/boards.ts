@@ -12,9 +12,7 @@ const Copy = z
   })
   .transform((v) => v === "true");
 
-const CreateBody = z
-  .object({ roomId: RoomId, name: Common.Name.optional() })
-  .strict();
+const CreateBody = z.object({ roomId: RoomId, name: Common.Name.optional() }).strict();
 const UpdateBody = CreateBody;
 const BoardQuery = z.object({ copy: Copy }).strict();
 

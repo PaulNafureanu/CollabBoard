@@ -1,9 +1,4 @@
-import type {
-  JoinRoomType,
-  ReSyncRoomStateType,
-  RoomClosedType,
-  RoomStateType,
-} from "@collabboard/shared";
+import type { JoinRoomType, ReSyncRoomStateType, RoomClosedType, RoomStateType } from "@collabboard/shared";
 import { getSocket } from "./socket";
 
 export function emitJoinRoom(roomId: number) {

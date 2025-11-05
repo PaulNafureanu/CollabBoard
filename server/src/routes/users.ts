@@ -1,10 +1,6 @@
 import * as bcrypt from "bcrypt";
 import { Router } from "express";
-import {
-  getPageData,
-  PublicMembership,
-  PublicUser,
-} from "../common/publicShapes";
+import { getPageData, PublicMembership, PublicUser } from "../common/publicShapes";
 import { prisma } from "../db/prisma";
 import { Users, Common } from "@collabboard/shared";
 const { CreateBody, UpdateBody } = Users.default;
