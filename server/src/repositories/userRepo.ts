@@ -23,7 +23,7 @@ export const makeUserRepo = (db: TxClient) => {
     return PublicUser.parse(dto);
   };
 
-  const createPermUser = async (body: CreateUserBody) => {
+  const createPermUser = async (body: CreateUserBody): Promise<PublicUserType> => {
     const { username, email, password } = body;
     const pwdHash = await bcrypt.hash(password, 12);
     const row = await db.user.create({
