@@ -1,5 +1,6 @@
 import type { CreateUserBody, UpdateUserBody } from "@collabboard/shared";
 import * as bcrypt from "bcrypt";
+import { Prisma } from "../generated/prisma";
 import { PublicUser, type PublicUserType } from "./schemas/userSchemas";
 import { mapUserRowToPublic, publicUserSelect } from "./shapes/userShape";
 import type { TxClient } from "./types/tx";
@@ -45,7 +46,7 @@ export const makeUserRepo = (db: TxClient) => {
 
   const updateUser = async (userId: number, body: UpdateUserBody) => {
     const { username, email, password } = body;
-    const data: any = {};
+    const data: Prisma.UserUpdateInput = {};
 
     if (username !== undefined) data.username = username;
     if (email !== undefined) data.email = email.toLowerCase();

@@ -1,4 +1,4 @@
-import type { CreateRoomBody, UpdateRoomBody } from "@collabboard/shared";
+import type { UpdateRoomBody } from "@collabboard/shared";
 import { PublicRoom, type PublicRoomType } from "./schemas/roomSchemas";
 import { mapRoomRowToPublic, publicRoomSelect } from "./shapes/roomShape";
 import type { TxClient } from "./types/tx";
