@@ -12,7 +12,7 @@ export type PublicRoomRow = Prisma.RoomGetPayload<{ select: typeof publicRoomSel
 
 export const mapRoomRowToPublic = (r: PublicRoomRow) => ({
   id: r.id,
-  name: r.name,
+  name: r.name === "" ? `Room${r.id}` : r.name,
   createdAt: r.createdAt.getTime(),
   updatedAt: r.updatedAt.getTime(),
   activeBoardStateId: r.activeBoardStateId,

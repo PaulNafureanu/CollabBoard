@@ -3,6 +3,8 @@ import { PublicRoom, type PublicRoomType } from "./schemas/roomSchemas";
 import { mapRoomRowToPublic, publicRoomSelect } from "./shapes/roomShape";
 import type { TxClient } from "./types/tx";
 
+export type RoomRepo = ReturnType<typeof makeRoomRepo>;
+
 export const makeRoomRepo = (db: TxClient) => {
   const findById = async (roomId: number): Promise<PublicRoomType | null> => {
     const row = await db.room.findUnique({ where: { id: roomId }, select: publicRoomSelect });
@@ -11,7 +13,11 @@ export const makeRoomRepo = (db: TxClient) => {
     return PublicRoom.parse(dto);
   };
 
-  const createRoom = async (body: CreateRoomBody): Promise<PublicRoomType> => {};
+  const createEmptyRoom = async (name?: string): Promise<PublicRoomType> => {
+    const row = await db.room.create({ data: { name: name ?? "" }, select: publicRoomSelect });
+    const dto = mapRoomRowToPublic(row);
+    return PublicRoom.parse(dto);
+  };
 
   const updateRoom = async (roomId: number, body: UpdateRoomBody): Promise<PublicRoomType> => {
     const { name, activeBoardStateId } = body;
@@ -29,5 +35,5 @@ export const makeRoomRepo = (db: TxClient) => {
     await db.room.delete({ where: { id: roomId } });
   };
 
-  return { findById, createRoom, updateRoom, deleteRoom };
+  return { findById, createEmptyRoom, updateRoom, deleteRoom };
 };
