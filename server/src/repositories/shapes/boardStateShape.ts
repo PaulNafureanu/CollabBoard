@@ -1,3 +1,4 @@
+import { JsonType } from "@collabboard/shared";
 import { Prisma } from "../../generated/prisma";
 
 export const publicBoardStateSelect = {
@@ -9,7 +10,7 @@ export const publicBoardStateSelect = {
 } satisfies Prisma.BoardStateSelect;
 
 export type PublicBoardStateRow = Prisma.BoardStateGetPayload<{ select: typeof publicBoardStateSelect }>;
-export const DefaultBoardStatePayload: Prisma.InputJsonValue = {};
+export const DefaultBoardStatePayload = {} as const;
 
 export const mapBoardStateRowToPublic = (s: PublicBoardStateRow) => ({
   id: s.id,

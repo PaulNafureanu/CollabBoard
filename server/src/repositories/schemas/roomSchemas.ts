@@ -5,7 +5,7 @@ export const PublicRoom = z.object({
   name: z.string().min(1),
   createdAt: z.number().int().nonnegative(),
   updatedAt: z.number().int().nonnegative(),
-  activeBoardStateId: z.number().int().positive(),
+  activeBoardStateId: z.number().int().positive().nullable(),
 });
 
 export type PublicRoomType = z.infer<typeof PublicRoom>;

@@ -23,10 +23,10 @@ export const makeUserRepo = (db: TxClient) => {
     return PublicUser.parse(dto);
   };
 
-  const setFieldsToEmptyUser = async (base: PublicUserType): Promise<PublicUserType> => {
+  const setFieldsToEmptyUser = async (baseId: number): Promise<PublicUserType> => {
     const row = await db.user.update({
-      where: { id: base.id },
-      data: { username: `User${base.id}` },
+      where: { id: baseId },
+      data: { username: `User${baseId}` },
       select: publicUserSelect,
     });
     const dto = mapUserRowToPublic(row);
