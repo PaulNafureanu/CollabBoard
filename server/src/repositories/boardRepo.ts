@@ -15,7 +15,7 @@ export const makeBoardRepo = (db: TxClient) => {
   };
 
   const createEmptyBoard = async (roomId: number, name?: string) => {
-    const row = await db.board.create({ data: { roomId, name: name ?? "" } });
+    const row = await db.board.create({ data: { roomId, name: name ?? "" }, select: publicBoardSelect });
     if (!row) return null;
     const dto = mapBoardRowToPublic(row);
     return PublicBoard.parse(dto);
