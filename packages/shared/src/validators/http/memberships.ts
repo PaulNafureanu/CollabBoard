@@ -1,11 +1,11 @@
 import * as z from "zod";
 import { Role as PrismaRole } from "../../../../../server/src/generated/prisma";
+import { Status as PrismaStatus } from "../../../../../server/src/generated/prisma";
 
 import Common from "./common";
 
 const RoleSchema = z.enum(Object.values(PrismaRole));
-// const StatusSchema = z.enum(Object.values(PrismaStatus));
-const StatusSchema = z.enum(["PENDING"]);
+const StatusSchema = z.enum(Object.values(PrismaStatus));
 
 const EnumCoerce = z
   .string()
@@ -24,7 +24,7 @@ const CreateBody = z
   })
   .strict();
 
-const UpdateBody = z.object({ role: RoleCoerced }).strict();
+const UpdateBody = z.object({ role: RoleCoerced, status: StatusCoerced }).strict();
 
 const Memberships = { CreateBody, UpdateBody };
 
