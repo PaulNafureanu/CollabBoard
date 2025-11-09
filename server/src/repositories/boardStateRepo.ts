@@ -3,6 +3,7 @@ import { PublicBoardState, PublicBoardStateType } from "./schemas/boardStateSche
 import { DefaultBoardStatePayload, mapBoardStateRowToPublic, publicBoardStateSelect } from "./shapes/boardStateShape";
 import { parseMany } from "./shared/parser";
 import { TxClient } from "./types/tx";
+import { buildDBPageQuery, OrderByKey } from "./shared/page";
 
 export const makeBoardStateRepo = (db: TxClient) => {
   const findById = async (boardStateId: number): Promise<PublicBoardStateType | null> => {
@@ -10,6 +11,14 @@ export const makeBoardStateRepo = (db: TxClient) => {
     if (!row) return null;
     const dto = mapBoardStateRowToPublic(row);
     return PublicBoardState.parse(dto);
+  };
+
+  const getPageByBoardId = async (boardId: number, page: number, size: number): Promise<PublicBoardStateType[]> => {
+    const rows = await db.boardState.findMany(
+      buildDBPageQuery({ boardId }, OrderByKey.version, page, size, publicBoardStateSelect),
+    );
+    if (rows.length === 0) return [];
+    return parseMany(rows, mapBoardStateRowToPublic, PublicBoardState);
   };
 
   const findManyByBoardId = async (boardId: number): Promise<PublicBoardStateType[]> => {
@@ -56,6 +65,7 @@ export const makeBoardStateRepo = (db: TxClient) => {
 
   return {
     findById,
+    getPage: getPageByBoardId,
     findManyByBoardId,
     findLastBoardState,
     createEmptyBoardStateForNewBoards,

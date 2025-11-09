@@ -3,6 +3,8 @@ import { Role, Status } from "../generated/prisma";
 import { PublicMembership, PublicMembershipType } from "./schemas/membershipSchemas";
 import { mapMembershipRowToPublic, publicMembershipSelect } from "./shapes/membershipShape";
 import { TxClient } from "./types/tx";
+import { buildDBPageQuery, OrderByKey } from "./shared/page";
+import { parseMany } from "./shared/parser";
 
 export const makeMembershipRepo = (db: TxClient) => {
   const findById = async (membershipId: number): Promise<PublicMembershipType | null> => {
@@ -10,6 +12,22 @@ export const makeMembershipRepo = (db: TxClient) => {
     if (!row) return null;
     const dto = mapMembershipRowToPublic(row);
     return PublicMembership.parse(dto);
+  };
+
+  const getPageByRoomId = async (roomId: number, page: number, size: number): Promise<PublicMembershipType[]> => {
+    const rows = await db.membership.findMany(
+      buildDBPageQuery({ roomId }, OrderByKey.createdAt, page, size, publicMembershipSelect),
+    );
+    if (rows.length === 0) return [];
+    return parseMany(rows, mapMembershipRowToPublic, PublicMembership);
+  };
+
+  const getPageByUserId = async (userId: number, page: number, size: number): Promise<PublicMembershipType[]> => {
+    const rows = await db.membership.findMany(
+      buildDBPageQuery({ userId }, OrderByKey.joinedAt, page, size, publicMembershipSelect),
+    );
+    if (rows.length === 0) return [];
+    return parseMany(rows, mapMembershipRowToPublic, PublicMembership);
   };
 
   const createMembership = async (body: CreateMembershipBody): Promise<PublicMembershipType> => {
@@ -39,5 +57,5 @@ export const makeMembershipRepo = (db: TxClient) => {
     await db.membership.delete({ where: { id: membershipId } });
   };
 
-  return { findById, createMembership, updateMembership, deleteMembership };
+  return { findById, getPageByRoomId, getPageByUserId, createMembership, updateMembership, deleteMembership };
 };

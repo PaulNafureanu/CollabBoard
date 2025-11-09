@@ -2,6 +2,8 @@ import { CreateMessageBody, UpdateMessageBody } from "@collabboard/shared";
 import { TxClient } from "./types/tx";
 import { PublicMessage, PublicMessageType } from "./schemas/messageSchemas";
 import { mapMessageRowToPublic, publicMessageSelect } from "./shapes/messageShape";
+import { buildDBPageQuery, OrderByKey } from "./shared/page";
+import { parseMany } from "./shared/parser";
 
 export const makeMessageRepo = (db: TxClient) => {
   const findById = async (messageId: number): Promise<PublicMessageType | null> => {
@@ -9,6 +11,14 @@ export const makeMessageRepo = (db: TxClient) => {
     if (!row) return null;
     const dto = mapMessageRowToPublic(row);
     return PublicMessage.parse(dto);
+  };
+
+  const getPageByRoomId = async (roomId: number, page: number, size: number): Promise<PublicMessageType[]> => {
+    const rows = await db.message.findMany(
+      buildDBPageQuery({ roomId }, OrderByKey.createdAt, page, size, publicMessageSelect),
+    );
+    if (rows.length === 0) return [];
+    return parseMany(rows, mapMessageRowToPublic, PublicMessage);
   };
 
   const createMessage = async (author: string, body: CreateMessageBody): Promise<PublicMessageType> => {
@@ -30,5 +40,5 @@ export const makeMessageRepo = (db: TxClient) => {
     await db.message.delete({ where: { id: messageId } });
   };
 
-  return { findById, createMessage, updateMessage, deleteMessage };
+  return { findById, getPageByRoomId, createMessage, updateMessage, deleteMessage };
 };

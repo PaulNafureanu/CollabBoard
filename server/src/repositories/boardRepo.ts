@@ -1,5 +1,7 @@
 import { PublicBoard, PublicBoardType } from "./schemas/boardSchemas";
 import { mapBoardRowToPublic, publicBoardSelect } from "./shapes/boardShape";
+import { buildDBPageQuery, OrderByKey } from "./shared/page";
+import { parseMany } from "./shared/parser";
 import { TxClient } from "./types/tx";
 
 export const makeBoardRepo = (db: TxClient) => {
@@ -12,6 +14,14 @@ export const makeBoardRepo = (db: TxClient) => {
     if (!row) return null;
     const dto = mapBoardRowToPublic(row);
     return PublicBoard.parse(dto);
+  };
+
+  const getPageByRoomId = async (roomId: number, page: number, size: number): Promise<PublicBoardType[]> => {
+    const rows = await db.board.findMany(
+      buildDBPageQuery({ roomId }, OrderByKey.updatedAt, page, size, publicBoardSelect),
+    );
+    if (rows.length === 0) return [];
+    return parseMany(rows, mapBoardRowToPublic, PublicBoard);
   };
 
   const createEmptyBoard = async (roomId: number, name?: string) => {
@@ -38,5 +48,5 @@ export const makeBoardRepo = (db: TxClient) => {
     await db.board.delete({ where: { id: boardId } });
   };
 
-  return { count, findById, createEmptyBoard, updateBoard, deleteBoard };
+  return { count, getPageByRoomId, findById, createEmptyBoard, updateBoard, deleteBoard };
 };
