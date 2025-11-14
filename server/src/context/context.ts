@@ -6,6 +6,7 @@ import { RedisLock } from "../redis/lock";
 import { MemberService } from "../redis/member";
 import { MessageService } from "../redis/message";
 import { PresenceService } from "../redis/presence";
+import { UserService } from "../redis/user";
 
 const NSP_ROOMS = "/rooms";
 
@@ -14,6 +15,7 @@ export type AppContext = {
   nsp: NamespaceType;
   redis: Redis;
   services: {
+    user: UserService;
     board: BoardStateService;
     cursor: CursorService;
     member: MemberService;
@@ -31,6 +33,7 @@ export function buildContext(io: ServerType, redis: Redis): AppContext {
     nsp,
     redis,
     services: {
+      user: new UserService(redis),
       board: new BoardStateService(redis, locker),
       cursor: new CursorService(redis),
       member: new MemberService(redis),

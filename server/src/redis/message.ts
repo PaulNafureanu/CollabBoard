@@ -1,4 +1,3 @@
-import type { ChatMessageType } from "@collabboard/shared";
 import type Redis from "ioredis";
 
 const MAX_CACHE_PER_ROOM = 100 as const;
@@ -7,12 +6,21 @@ const MAX_CACHE_PER_USER = 1000 as const;
 /**
  * 1. Mods+ -> delete messages
  * 2. Users -> Edit their own text messages
- * 3. Author Messages -> updates with the last username change
  *
  * room:{roomId}:messages:user:{userId} ZSET (msg ids by user)
  * room:{roomId}:messages LIST (msg ids by room)
- * room:{roomId}:message:{msgId} HASH {userId, author, text, at, deletedById, isEdited}
+ * room:{roomId}:message:{msgId} HASH {userId, text, at, deletedById, isEdited}
  */
+
+type ChatMessageData = {
+  id: number;
+  isEdited: boolean;
+  text: string;
+  at: number;
+  roomId: number;
+  userId?: number | undefined;
+  deletedById?: number | undefined;
+};
 
 export class MessageService {
   constructor(private r: Redis) {}
@@ -21,10 +29,9 @@ export class MessageService {
   private static keyUser = (roomId: number, userId: number) => `room:${roomId}:messages:user:${userId}`;
   private static keyMsg = (roomId: number, msgId: number) => `room:${roomId}:message:${msgId}`;
 
-  private static parseMsg = (roomId: number, msgId: number, res: Record<string, string>): ChatMessageType | null => {
+  private static parseMsg = (roomId: number, msgId: number, res: Record<string, string>): ChatMessageData | null => {
     if (!res || Object.keys(res).length === 0) return null;
 
-    const author = res.author?.trim();
     const text = res.text?.trim();
     const at = Number(res.at);
     const isEdited = Number(res.isEdited);
@@ -34,13 +41,12 @@ export class MessageService {
     const isAtValid = Number.isFinite(at);
     const isFlagValid = Number.isFinite(isEdited);
 
-    if (!author || !text || !isAtValid || !isFlagValid) return null;
+    if (!text || !isAtValid || !isFlagValid) return null;
     if (res.userId && !Number.isFinite(userId)) return null;
     if (res.deletedById && !Number.isFinite(deletedById)) return null;
 
-    const msg: ChatMessageType = {
+    const msg: ChatMessageData = {
       id: msgId,
-      author,
       text,
       at,
       isEdited: Boolean(isEdited),
@@ -58,14 +64,13 @@ export class MessageService {
     return unique.map(Number).filter(Number.isFinite).slice(0, count);
   };
 
-  async setAll({ roomId, id, userId, author, text, deletedById, isEdited, at }: ChatMessageType) {
+  async setAll({ roomId, id, userId, text, deletedById, isEdited, at }: ChatMessageData) {
     if (!userId) return;
     const keyRoom = MessageService.keyRoom(roomId);
     const keyUser = MessageService.keyUser(roomId, userId);
     const keyMsg = MessageService.keyMsg(roomId, id);
     const msgId = String(id);
     const msg = {
-      author,
       text,
       at: String(at),
       isEdited: isEdited ? "1" : "0",
@@ -86,10 +91,9 @@ export class MessageService {
       .exec();
   }
 
-  async setMsg({ roomId, id, userId, author, text, deletedById, isEdited, at }: ChatMessageType) {
+  async setMsg({ roomId, id, userId, text, deletedById, isEdited, at }: ChatMessageData) {
     const keyMsg = MessageService.keyMsg(roomId, id);
     const msg = {
-      author,
       text,
       at: String(at),
       isEdited: isEdited ? "1" : "0",
@@ -115,13 +119,13 @@ export class MessageService {
     return MessageService.parseStrIds(res, max, max);
   }
 
-  async getMsg(roomId: number, msgId: number): Promise<ChatMessageType | null> {
+  async getMsg(roomId: number, msgId: number): Promise<ChatMessageData | null> {
     const key = MessageService.keyMsg(roomId, msgId);
     const res = await this.r.hgetall(key);
     return MessageService.parseMsg(roomId, msgId, res);
   }
 
-  async getMsgByIds(roomId: number, msgIds: number[]): Promise<ChatMessageType[]> {
+  async getMsgByIds(roomId: number, msgIds: number[]): Promise<ChatMessageData[]> {
     if (msgIds.length === 0) return [];
     const pipe = this.r.pipeline();
     msgIds.forEach((id) => pipe.hgetall(MessageService.keyMsg(roomId, id)));
