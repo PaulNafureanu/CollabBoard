@@ -6,6 +6,10 @@ import { buildDBPageQuery, OrderByKey } from "./shared/page";
 import { parseMany } from "./shared/parser";
 
 export const makeMessageRepo = (db: TxClient) => {
+  const count = async (roomId: number): Promise<number> => {
+    return await db.message.count({ where: { roomId } });
+  };
+
   const findById = async (messageId: number): Promise<PublicMessageType | null> => {
     const row = await db.message.findUnique({ where: { id: messageId }, select: publicMessageSelect });
     if (!row) return null;
@@ -40,5 +44,5 @@ export const makeMessageRepo = (db: TxClient) => {
     await db.message.delete({ where: { id: messageId } });
   };
 
-  return { findById, getPageByRoomId, createMessage, updateMessage, deleteMessage };
+  return { findById, count, getPageByRoomId, createMessage, updateMessage, deleteMessage };
 };

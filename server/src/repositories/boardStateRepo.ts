@@ -6,6 +6,10 @@ import { TxClient } from "./types/tx";
 import { buildDBPageQuery, OrderByKey } from "./shared/page";
 
 export const makeBoardStateRepo = (db: TxClient) => {
+  const count = async (boardId: number): Promise<number> => {
+    return await db.boardState.count({ where: { boardId } });
+  };
+
   const findById = async (boardStateId: number): Promise<PublicBoardStateType | null> => {
     const row = await db.boardState.findUnique({ where: { id: boardStateId }, select: publicBoardStateSelect });
     if (!row) return null;
@@ -65,7 +69,8 @@ export const makeBoardStateRepo = (db: TxClient) => {
 
   return {
     findById,
-    getPage: getPageByBoardId,
+    count,
+    getPageByBoardId,
     findManyByBoardId,
     findLastBoardState,
     createEmptyBoardStateForNewBoards,

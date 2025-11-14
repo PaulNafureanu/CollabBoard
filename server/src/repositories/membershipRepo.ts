@@ -7,6 +7,14 @@ import { buildDBPageQuery, OrderByKey } from "./shared/page";
 import { parseMany } from "./shared/parser";
 
 export const makeMembershipRepo = (db: TxClient) => {
+  const countByRoomId = async (roomId: number): Promise<number> => {
+    return await db.membership.count({ where: { roomId } });
+  };
+
+  const countByUserId = async (userId: number): Promise<number> => {
+    return await db.membership.count({ where: { userId } });
+  };
+
   const findById = async (membershipId: number): Promise<PublicMembershipType | null> => {
     const row = await db.membership.findUnique({ where: { id: membershipId }, select: publicMembershipSelect });
     if (!row) return null;
@@ -57,5 +65,14 @@ export const makeMembershipRepo = (db: TxClient) => {
     await db.membership.delete({ where: { id: membershipId } });
   };
 
-  return { findById, getPageByRoomId, getPageByUserId, createMembership, updateMembership, deleteMembership };
+  return {
+    findById,
+    countByRoomId,
+    countByUserId,
+    getPageByRoomId,
+    getPageByUserId,
+    createMembership,
+    updateMembership,
+    deleteMembership,
+  };
 };

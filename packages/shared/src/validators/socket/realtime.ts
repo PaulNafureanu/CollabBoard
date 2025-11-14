@@ -133,7 +133,7 @@ export const UserBanned = z
 // Broadcast to the room
 export const UserLeft = ExtendedRoomMember.strict();
 
-// Broadcast to the room when the online/offline state changes for an user
+// Broadcast to the room when the user state changes for an user
 export const UserState = ExtendedRoomMember.strict();
 
 // Client to Server
