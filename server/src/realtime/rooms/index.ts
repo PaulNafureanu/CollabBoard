@@ -1,4 +1,4 @@
-import { AppContext } from "../../context";
+import { AppContext } from "../../context/context";
 import { SYS_ROOM, userRoom } from "../bus";
 import { registerEvents } from "./events";
 

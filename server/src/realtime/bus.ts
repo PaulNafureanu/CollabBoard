@@ -1,5 +1,5 @@
 import type { Role, Status } from "@collabboard/shared";
-import type { AppContext } from "../context";
+import type { AppContext } from "../context/context";
 import { ALL_ROLES, ALL_STATUSES, type NamespaceType } from "./types";
 
 export const SYS_ROOM = "system:announcements";

@@ -8,7 +8,7 @@ import { Server as IOServer } from "socket.io";
 import type { ClientToServerEvents, ServerToClientEvents } from "@collabboard/shared";
 import { createAdapter } from "@socket.io/redis-adapter";
 import helmet from "helmet";
-import { buildContext } from "./context";
+import { buildContext } from "./context/context";
 import { errorHandler, jsonParseGuard } from "./middleware/errors";
 import { wireRealtime } from "./realtime";
 import type { ServerSideEvents, SocketDataSchema } from "./realtime/types";
