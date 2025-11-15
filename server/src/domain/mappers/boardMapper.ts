@@ -1,6 +1,7 @@
+import type { BoardPublic } from "@collabboard/shared";
 import type { BoardPublicRow } from "../../db";
 
-export const toBoardPublic = (b: BoardPublicRow) => ({
+export const toBoardPublic = (b: BoardPublicRow): BoardPublic => ({
   id: b.id,
   roomId: b.roomId,
   name: b.name === "" ? `Board${b.id}` : b.name,

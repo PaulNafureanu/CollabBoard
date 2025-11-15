@@ -1,38 +1,37 @@
-import type { CreateUserBody, UpdateUserBody } from "@collabboard/shared";
 import * as bcrypt from "bcrypt";
-import { PublicUser, type PublicUserType } from "./schemas/userSchemas";
 import { Prisma, TxClient, userPublicSelect } from "../db";
 import { toUserPublic } from "../domain";
+import { UserCreate, UserPublic, UserPublicSchema, UserUpdate } from "@collabboard/shared";
 
 const SALT_ROUNDS = Number(process.env.SALT_ROUNDS ?? 12);
 
 export type UserRepo = ReturnType<typeof makeUserRepo>;
 
 export const makeUserRepo = (db: TxClient) => {
-  const findById = async (userId: number): Promise<PublicUserType | null> => {
+  const findById = async (userId: number): Promise<UserPublic | null> => {
     const row = await db.user.findUnique({ where: { id: userId }, select: userPublicSelect });
     if (!row) return null;
     const dto = toUserPublic(row);
-    return PublicUser.parse(dto);
+    return UserPublicSchema.parse(dto);
   };
 
-  const createEmptyUser = async (): Promise<PublicUserType> => {
+  const createEmptyUser = async (): Promise<UserPublic> => {
     const row = await db.user.create({ data: {}, select: userPublicSelect });
     const dto = toUserPublic(row);
-    return PublicUser.parse(dto);
+    return UserPublicSchema.parse(dto);
   };
 
-  const setFieldsToEmptyUser = async (baseId: number): Promise<PublicUserType> => {
+  const setFieldsToEmptyUser = async (baseId: number): Promise<UserPublic> => {
     const row = await db.user.update({
       where: { id: baseId },
       data: { username: `User${baseId}` },
       select: userPublicSelect,
     });
     const dto = toUserPublic(row);
-    return PublicUser.parse(dto);
+    return UserPublicSchema.parse(dto);
   };
 
-  const createPermUser = async (body: CreateUserBody): Promise<PublicUserType> => {
+  const createPermUser = async (body: UserCreate): Promise<UserPublic> => {
     const { username, email, password } = body;
     const pwdHash = await bcrypt.hash(password, SALT_ROUNDS);
     const row = await db.user.create({
@@ -40,10 +39,10 @@ export const makeUserRepo = (db: TxClient) => {
       select: userPublicSelect,
     });
     const dto = toUserPublic(row);
-    return PublicUser.parse(dto);
+    return UserPublicSchema.parse(dto);
   };
 
-  const updateUser = async (userId: number, body: UpdateUserBody) => {
+  const updateUser = async (userId: number, body: UserUpdate): Promise<UserPublic> => {
     const { username, email, password } = body;
     const data: Prisma.UserUpdateInput = {};
 
@@ -54,7 +53,7 @@ export const makeUserRepo = (db: TxClient) => {
 
     const row = await db.user.update({ where: { id: userId }, data, select: userPublicSelect });
     const dto = toUserPublic(row);
-    return PublicUser.parse(dto);
+    return UserPublicSchema.parse(dto);
   };
 
   const deleteUser = async (userId: number) => {
