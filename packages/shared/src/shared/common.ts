@@ -12,8 +12,10 @@ export const Flag = z.boolean();
 export const Text = z.string().min(1).max(TEXT_MAX_LEN);
 
 // db related
-export const Role = z.enum(["OWNER", "MODERATOR", "EDITOR", "MEMBER", "VIEWER"]);
-export const Status = z.enum(["PENDING", "APPROVED", "BANNED"]);
+export const RoleSchema = z.enum(["OWNER", "MODERATOR", "EDITOR", "MEMBER", "VIEWER"]);
+export const StatusSchema = z.enum(["PENDING", "APPROVED", "BANNED"]);
+export type Role = z.infer<typeof RoleSchema>;
+export type Status = z.infer<typeof StatusSchema>;
 
 // pagimation
 export const Page = z.coerce.number().int().min(0).default(0);

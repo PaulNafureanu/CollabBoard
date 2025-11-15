@@ -1,13 +1,13 @@
 import z from "zod";
-import { Id, MsEpoch, Role, Status } from "../shared/common";
+import { Id, MsEpoch, RoleSchema, StatusSchema } from "../shared/common";
 
 export const MembershipPublicSchema = z
   .object({
     id: Id,
     userId: Id,
     roomId: Id,
-    role: Role,
-    status: Status,
+    role: RoleSchema,
+    status: StatusSchema,
     joinedAt: MsEpoch,
     updatedAt: MsEpoch,
   })
@@ -17,12 +17,14 @@ export const MembershipCreateSchema = z
   .object({
     userId: Id,
     roomId: Id,
-    role: Role.optional(),
-    status: Status,
+    role: RoleSchema.optional(),
+    status: StatusSchema,
   })
   .strict();
 
-export const MembershipUpdateSchema = z.object({ role: Role.optional(), status: Status.optional() }).strict();
+export const MembershipUpdateSchema = z
+  .object({ role: RoleSchema.optional(), status: StatusSchema.optional() })
+  .strict();
 
 export type MembershipPublic = z.infer<typeof MembershipPublicSchema>;
 export type MembershipCreate = z.infer<typeof MembershipCreateSchema>;
