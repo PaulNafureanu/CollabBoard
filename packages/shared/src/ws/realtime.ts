@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { JsonPathSchema, JsonSchema } from "../../common/json";
+import { JsonPathSchema, JsonSchema } from "./../shared/json";
 
 /**
  * General validators

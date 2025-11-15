@@ -18,7 +18,7 @@ import {
   UserJoined,
   UserLeft,
   UserState,
-} from "./../../validators/socket/realtime";
+} from "./realtime";
 
 export type MsEpochType = z.infer<typeof MsEpoch>;
 export type CursorMoveType = z.infer<typeof CursorMove>;
