@@ -1,9 +1,9 @@
 import { CreateMessageBody, UpdateMessageBody } from "@collabboard/shared";
-import { TxClient } from "./types/tx";
 import { PublicMessage, PublicMessageType } from "./schemas/messageSchemas";
-import { mapMessageRowToPublic, publicMessageSelect } from "./shapes/messageShape";
 import { buildDBPageQuery, OrderByKey } from "./shared/page";
 import { parseMany } from "./shared/parser";
+import { messagePublicSelect, TxClient } from "../db";
+import { toMessagePublic } from "../domain";
 
 export const makeMessageRepo = (db: TxClient) => {
   const count = async (roomId: number): Promise<number> => {
@@ -11,32 +11,32 @@ export const makeMessageRepo = (db: TxClient) => {
   };
 
   const findById = async (messageId: number): Promise<PublicMessageType | null> => {
-    const row = await db.message.findUnique({ where: { id: messageId }, select: publicMessageSelect });
+    const row = await db.message.findUnique({ where: { id: messageId }, select: messagePublicSelect });
     if (!row) return null;
-    const dto = mapMessageRowToPublic(row);
+    const dto = toMessagePublic(row);
     return PublicMessage.parse(dto);
   };
 
   const getPageByRoomId = async (roomId: number, page: number, size: number): Promise<PublicMessageType[]> => {
     const rows = await db.message.findMany(
-      buildDBPageQuery({ roomId }, OrderByKey.createdAt, page, size, publicMessageSelect),
+      buildDBPageQuery({ roomId }, OrderByKey.createdAt, page, size, messagePublicSelect),
     );
     if (rows.length === 0) return [];
-    return parseMany(rows, mapMessageRowToPublic, PublicMessage);
+    return parseMany(rows, toMessagePublic, PublicMessage);
   };
 
   const createMessage = async (author: string, body: CreateMessageBody): Promise<PublicMessageType> => {
     const row = await db.message.create({
       data: { ...body, author },
-      select: publicMessageSelect,
+      select: messagePublicSelect,
     });
-    const dto = mapMessageRowToPublic(row);
+    const dto = toMessagePublic(row);
     return PublicMessage.parse(dto);
   };
 
   const updateMessage = async (messageId: number, body: UpdateMessageBody): Promise<PublicMessageType> => {
-    const row = await db.message.update({ where: { id: messageId }, data: { ...body }, select: publicMessageSelect });
-    const dto = mapMessageRowToPublic(row);
+    const row = await db.message.update({ where: { id: messageId }, data: { ...body }, select: messagePublicSelect });
+    const dto = toMessagePublic(row);
     return PublicMessage.parse(dto);
   };
 

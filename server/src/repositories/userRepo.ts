@@ -1,9 +1,8 @@
 import type { CreateUserBody, UpdateUserBody } from "@collabboard/shared";
 import * as bcrypt from "bcrypt";
-import { Prisma } from "../generated/prisma";
 import { PublicUser, type PublicUserType } from "./schemas/userSchemas";
-import { mapUserRowToPublic, publicUserSelect } from "./shapes/userShape";
-import type { TxClient } from "./types/tx";
+import { Prisma, TxClient, userPublicSelect } from "../db";
+import { toUserPublic } from "../domain";
 
 const SALT_ROUNDS = Number(process.env.SALT_ROUNDS ?? 12);
 
@@ -11,15 +10,15 @@ export type UserRepo = ReturnType<typeof makeUserRepo>;
 
 export const makeUserRepo = (db: TxClient) => {
   const findById = async (userId: number): Promise<PublicUserType | null> => {
-    const row = await db.user.findUnique({ where: { id: userId }, select: publicUserSelect });
+    const row = await db.user.findUnique({ where: { id: userId }, select: userPublicSelect });
     if (!row) return null;
-    const dto = mapUserRowToPublic(row);
+    const dto = toUserPublic(row);
     return PublicUser.parse(dto);
   };
 
   const createEmptyUser = async (): Promise<PublicUserType> => {
-    const row = await db.user.create({ data: {}, select: publicUserSelect });
-    const dto = mapUserRowToPublic(row);
+    const row = await db.user.create({ data: {}, select: userPublicSelect });
+    const dto = toUserPublic(row);
     return PublicUser.parse(dto);
   };
 
@@ -27,9 +26,9 @@ export const makeUserRepo = (db: TxClient) => {
     const row = await db.user.update({
       where: { id: baseId },
       data: { username: `User${baseId}` },
-      select: publicUserSelect,
+      select: userPublicSelect,
     });
-    const dto = mapUserRowToPublic(row);
+    const dto = toUserPublic(row);
     return PublicUser.parse(dto);
   };
 
@@ -38,9 +37,9 @@ export const makeUserRepo = (db: TxClient) => {
     const pwdHash = await bcrypt.hash(password, SALT_ROUNDS);
     const row = await db.user.create({
       data: { username, email: email.toLowerCase(), pwdHash, isAnonymous: false },
-      select: publicUserSelect,
+      select: userPublicSelect,
     });
-    const dto = mapUserRowToPublic(row);
+    const dto = toUserPublic(row);
     return PublicUser.parse(dto);
   };
 
@@ -53,8 +52,8 @@ export const makeUserRepo = (db: TxClient) => {
     if (password !== undefined) data.pwdHash = await bcrypt.hash(password, SALT_ROUNDS);
     data.isAnonymous = false;
 
-    const row = await db.user.update({ where: { id: userId }, data, select: publicUserSelect });
-    const dto = mapUserRowToPublic(row);
+    const row = await db.user.update({ where: { id: userId }, data, select: userPublicSelect });
+    const dto = toUserPublic(row);
     return PublicUser.parse(dto);
   };
 

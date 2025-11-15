@@ -12,6 +12,8 @@ const Name = z.string().trim().min(1).max(64);
 const Role = z.enum(["OWNER", "MODERATOR", "EDITOR", "MEMBER", "VIEWER"]);
 const Status = z.enum(["PENDING", "APPROVED", "BANNED"]);
 
+const User = z.object({});
+
 const RoomMember = z.object({
   id: Id, //membership id
   userId: Id,

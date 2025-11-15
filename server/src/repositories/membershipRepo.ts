@@ -1,10 +1,10 @@
 import { CreateMembershipBody, UpdateMembershipBody } from "@collabboard/shared";
-import { Role, Status } from "../generated/prisma";
 import { PublicMembership, PublicMembershipType } from "./schemas/membershipSchemas";
-import { mapMembershipRowToPublic, publicMembershipSelect } from "./shapes/membershipShape";
-import { TxClient } from "./types/tx";
+import { membershipPublicSelect } from "../db/shapes/membershipShape";
 import { buildDBPageQuery, OrderByKey } from "./shared/page";
 import { parseMany } from "./shared/parser";
+import { Role, Status, TxClient } from "../db";
+import { toMembershipPublic } from "../domain";
 
 export const makeMembershipRepo = (db: TxClient) => {
   const countByRoomId = async (roomId: number): Promise<number> => {
@@ -16,26 +16,26 @@ export const makeMembershipRepo = (db: TxClient) => {
   };
 
   const findById = async (membershipId: number): Promise<PublicMembershipType | null> => {
-    const row = await db.membership.findUnique({ where: { id: membershipId }, select: publicMembershipSelect });
+    const row = await db.membership.findUnique({ where: { id: membershipId }, select: membershipPublicSelect });
     if (!row) return null;
-    const dto = mapMembershipRowToPublic(row);
+    const dto = toMembershipPublic(row);
     return PublicMembership.parse(dto);
   };
 
   const getPageByRoomId = async (roomId: number, page: number, size: number): Promise<PublicMembershipType[]> => {
     const rows = await db.membership.findMany(
-      buildDBPageQuery({ roomId }, OrderByKey.createdAt, page, size, publicMembershipSelect),
+      buildDBPageQuery({ roomId }, OrderByKey.createdAt, page, size, membershipPublicSelect),
     );
     if (rows.length === 0) return [];
-    return parseMany(rows, mapMembershipRowToPublic, PublicMembership);
+    return parseMany(rows, toMembershipPublic, PublicMembership);
   };
 
   const getPageByUserId = async (userId: number, page: number, size: number): Promise<PublicMembershipType[]> => {
     const rows = await db.membership.findMany(
-      buildDBPageQuery({ userId }, OrderByKey.joinedAt, page, size, publicMembershipSelect),
+      buildDBPageQuery({ userId }, OrderByKey.joinedAt, page, size, membershipPublicSelect),
     );
     if (rows.length === 0) return [];
-    return parseMany(rows, mapMembershipRowToPublic, PublicMembership);
+    return parseMany(rows, toMembershipPublic, PublicMembership);
   };
 
   const createMembership = async (body: CreateMembershipBody): Promise<PublicMembershipType> => {
@@ -43,9 +43,9 @@ export const makeMembershipRepo = (db: TxClient) => {
     const status = body.status.trim().toUpperCase() as Status;
     const row = await db.membership.create({
       data: { ...body, role: role ?? "MEMBER", status },
-      select: publicMembershipSelect,
+      select: membershipPublicSelect,
     });
-    const dto = mapMembershipRowToPublic(row);
+    const dto = toMembershipPublic(row);
     return PublicMembership.parse(dto);
   };
 
@@ -55,9 +55,9 @@ export const makeMembershipRepo = (db: TxClient) => {
     const row = await db.membership.update({
       where: { id: membershipId },
       data: { ...body, role, status },
-      select: publicMembershipSelect,
+      select: membershipPublicSelect,
     });
-    const dto = mapMembershipRowToPublic(row);
+    const dto = toMembershipPublic(row);
     return PublicMembership.parse(dto);
   };
 

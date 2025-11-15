@@ -1,8 +1,8 @@
+import { boardPublicSelect, TxClient } from "../db";
+import { toBoardPublic } from "../domain";
 import { PublicBoard, PublicBoardType } from "./schemas/boardSchemas";
-import { mapBoardRowToPublic, publicBoardSelect } from "./shapes/boardShape";
 import { buildDBPageQuery, OrderByKey } from "./shared/page";
 import { parseMany } from "./shared/parser";
-import { TxClient } from "./types/tx";
 
 export const makeBoardRepo = (db: TxClient) => {
   const count = async (roomId: number): Promise<number> => {
@@ -10,24 +10,24 @@ export const makeBoardRepo = (db: TxClient) => {
   };
 
   const findById = async (boardId: number): Promise<PublicBoardType | null> => {
-    const row = await db.board.findUnique({ where: { id: boardId }, select: publicBoardSelect });
+    const row = await db.board.findUnique({ where: { id: boardId }, select: boardPublicSelect });
     if (!row) return null;
-    const dto = mapBoardRowToPublic(row);
+    const dto = toBoardPublic(row);
     return PublicBoard.parse(dto);
   };
 
   const getPageByRoomId = async (roomId: number, page: number, size: number): Promise<PublicBoardType[]> => {
     const rows = await db.board.findMany(
-      buildDBPageQuery({ roomId }, OrderByKey.updatedAt, page, size, publicBoardSelect),
+      buildDBPageQuery({ roomId }, OrderByKey.updatedAt, page, size, boardPublicSelect),
     );
     if (rows.length === 0) return [];
-    return parseMany(rows, mapBoardRowToPublic, PublicBoard);
+    return parseMany(rows, toBoardPublic, PublicBoard);
   };
 
   const createEmptyBoard = async (roomId: number, name?: string) => {
-    const row = await db.board.create({ data: { roomId, name: name ?? "" }, select: publicBoardSelect });
+    const row = await db.board.create({ data: { roomId, name: name ?? "" }, select: boardPublicSelect });
     if (!row) return null;
-    const dto = mapBoardRowToPublic(row);
+    const dto = toBoardPublic(row);
     return PublicBoard.parse(dto);
   };
 
@@ -38,9 +38,9 @@ export const makeBoardRepo = (db: TxClient) => {
     if (lastState !== undefined) data.lastState = lastState;
     if (name !== undefined) data.name = name;
 
-    const row = await db.board.update({ where: { id: boardId }, data, select: publicBoardSelect });
+    const row = await db.board.update({ where: { id: boardId }, data, select: boardPublicSelect });
     if (!row) return null;
-    const dto = mapBoardRowToPublic(row);
+    const dto = toBoardPublic(row);
     return PublicBoard.parse(dto);
   };
 

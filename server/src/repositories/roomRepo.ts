@@ -1,21 +1,21 @@
 import type { UpdateRoomBody } from "@collabboard/shared";
 import { PublicRoom, type PublicRoomType } from "./schemas/roomSchemas";
-import { mapRoomRowToPublic, publicRoomSelect } from "./shapes/roomShape";
-import type { TxClient } from "./types/tx";
+import { roomPublicSelect, TxClient } from "../db";
+import { toRoomPublic } from "../domain";
 
 export type RoomRepo = ReturnType<typeof makeRoomRepo>;
 
 export const makeRoomRepo = (db: TxClient) => {
   const findById = async (roomId: number): Promise<PublicRoomType | null> => {
-    const row = await db.room.findUnique({ where: { id: roomId }, select: publicRoomSelect });
+    const row = await db.room.findUnique({ where: { id: roomId }, select: roomPublicSelect });
     if (!row) return null;
-    const dto = mapRoomRowToPublic(row);
+    const dto = toRoomPublic(row);
     return PublicRoom.parse(dto);
   };
 
   const createEmptyRoom = async (name?: string): Promise<PublicRoomType> => {
-    const row = await db.room.create({ data: { name: name ?? "" }, select: publicRoomSelect });
-    const dto = mapRoomRowToPublic(row);
+    const row = await db.room.create({ data: { name: name ?? "" }, select: roomPublicSelect });
+    const dto = toRoomPublic(row);
     return PublicRoom.parse(dto);
   };
 
@@ -26,8 +26,8 @@ export const makeRoomRepo = (db: TxClient) => {
     if (name !== undefined) data.name = name;
     if (activeBoardStateId !== undefined) data.activeBoardStateId = activeBoardStateId;
 
-    const row = await db.room.update({ where: { id: roomId }, data, select: publicRoomSelect });
-    const dto = mapRoomRowToPublic(row);
+    const row = await db.room.update({ where: { id: roomId }, data, select: roomPublicSelect });
+    const dto = toRoomPublic(row);
     return PublicRoom.parse(dto);
   };
 
