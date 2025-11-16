@@ -1,12 +1,14 @@
 import type Redis from "ioredis";
 import type { NamespaceType, ServerType } from "../realtime/types";
-import { BoardStateService } from "../redis/board";
-import { CursorService } from "../redis/cursor";
-import { RedisLock } from "../redis/lock";
-import { MemberService } from "../redis/member";
-import { MessageService } from "../redis/message";
-import { PresenceService } from "../redis/presence";
-import { UserService } from "../redis/user";
+import {
+  BoardStateService,
+  CursorService,
+  MemberService,
+  MessageService,
+  PresenceService,
+  RedisLock,
+  UserService,
+} from "../services";
 
 const NSP_ROOMS = "/rooms";
 

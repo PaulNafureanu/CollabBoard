@@ -1,9 +1,9 @@
+import { MembershipCreate, MembershipPublic, MembershipPublicSchema, MembershipUpdate } from "@collabboard/shared";
+import { Prisma, TxClient } from "../db";
 import { membershipPublicSelect } from "../db/shapes/membershipShape";
+import { toMembershipPublic } from "../domain";
 import { buildDBPageQuery, OrderByKey } from "./shared/page";
 import { parseMany } from "./shared/parser";
-import { Prisma, Role, Status, TxClient } from "../db";
-import { toMembershipPublic } from "../domain";
-import { MembershipCreate, MembershipPublic, MembershipPublicSchema, MembershipUpdate } from "@collabboard/shared";
 
 export const makeMembershipRepo = (db: TxClient) => {
   const countByRoomId = async (roomId: number): Promise<number> => {

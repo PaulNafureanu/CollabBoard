@@ -1,10 +1,6 @@
 import type { ClientToServerEvents, ServerToClientEvents } from "@collabboard/shared";
-import { Role, Status } from "@collabboard/shared";
 import type { Namespace, Server, Socket } from "socket.io";
 import type { AppContext } from "../context/context";
-
-export const ALL_STATUSES: Status[] = Object.values(Status);
-export const ALL_ROLES: Role[] = Object.values(Role);
 
 export type ServerSideEvents = {};
 
