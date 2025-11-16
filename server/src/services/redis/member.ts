@@ -1,5 +1,5 @@
-import { Role, Status } from "@collabboard/shared";
 import type Redis from "ioredis";
+import { ALL_ROLES, ALL_STATUSES, Role, Status } from "../../db";
 
 export type Member = {
   roomId: number;
@@ -8,9 +8,6 @@ export type Member = {
   role: Role;
   status: Status;
 };
-
-const ALL_STATUSES: Status[] = Object.values(Status);
-const ALL_ROLES: Role[] = Object.values(Role);
 
 export class MemberService {
   constructor(private r: Redis) {}

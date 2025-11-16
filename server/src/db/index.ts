@@ -6,4 +6,5 @@ export * from "./shapes/membershipShape";
 export * from "./shapes/messageShape";
 export * from "./shapes/roomShape";
 export * from "./shapes/userShape";
+export * from "./types/enum";
 export type * from "./types/types";

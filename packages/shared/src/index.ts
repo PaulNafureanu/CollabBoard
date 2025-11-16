@@ -7,3 +7,5 @@ export * from "./domain/membership";
 export * from "./domain/message";
 export * from "./domain/room";
 export * from "./domain/user";
+export * from "./ws/patch";
+export * from "./ws/realtime_types";

@@ -1,6 +1,6 @@
 import type Redis from "ioredis";
-import { applyPatchToPayload, type BoardPatchType, type JsonType } from "@collabboard/shared";
 import { RedisLock } from "./lock";
+import { applyPatchToPayload, BoardPatchType, Json } from "@collabboard/shared";
 
 /**
  *  where id is boardStateId (active board state in the room)
@@ -32,10 +32,10 @@ export type ActiveBoardState = {
   boardId: number;
   boardName: string;
   version: number;
-  payload: JsonType;
+  payload: Json;
 };
 
-export type PatchEntry = { v: number; uid: number; at: number; p: JsonType };
+export type PatchEntry = { v: number; uid: number; at: number; p: Json };
 export enum PATCH_CONFLICT_REASONS {
   UNDEFINED_STATE = "UNDEFINED_STATE",
   UNDEFINED_SERVER_RT = "UNDEFINED_SERVER_RT",
@@ -111,7 +111,7 @@ export class BoardStateService {
     await this.r.hset(key, statedata);
   }
 
-  async setPayload(roomId: number, payload: JsonType) {
+  async setPayload(roomId: number, payload: Json) {
     const key = BoardStateService.keyPayload(roomId);
     await this.r.set(key, JSON.stringify(payload));
   }
@@ -171,10 +171,10 @@ export class BoardStateService {
         };
       }
 
-      let nextPayload: JsonType;
+      let nextPayload: Json;
 
       try {
-        const current = JSON.parse(raw) as JsonType;
+        const current = JSON.parse(raw) as Json;
         nextPayload = applyPatchToPayload(current, patch);
       } catch {
         await this.r.unwatch();
@@ -247,7 +247,7 @@ export class BoardStateService {
     return statedata;
   }
 
-  async loadPayload(roomId: number): Promise<JsonType | null> {
+  async loadPayload(roomId: number): Promise<Json | null> {
     const key = BoardStateService.keyPayload(roomId);
     const res = await this.r.get(key);
     if (!res) return null;
@@ -268,7 +268,7 @@ export class BoardStateService {
 
       const uid = Number(map.uid);
       const at = Number(map.at);
-      let p: JsonType | null = null;
+      let p: Json | null = null;
 
       try {
         if (map.p) p = JSON.parse(map.p);
