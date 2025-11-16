@@ -1,7 +1,7 @@
 // server/src/middleware/errors.ts
 import { Request, Response, NextFunction } from "express";
 import { ZodError } from "zod";
-import { Prisma } from "../generated/prisma";
+import { Prisma } from "../db";
 
 type ErrBody = {
   error: {

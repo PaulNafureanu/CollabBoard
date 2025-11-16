@@ -1,8 +1,8 @@
-import type { PublicUserType } from "../../repositories/schemas/userSchemas";
-import { makeUserRepo } from "../../repositories/userRepo";
-import { prisma } from "./../../db/prisma";
+import { UserPublic } from "@collabboard/shared";
+import { prisma } from "../../db";
+import { makeUserRepo } from "../../repositories";
 
-export async function createAnonUser(): Promise<PublicUserType> {
+export async function createAnonUser(): Promise<UserPublic> {
   return await prisma.$transaction(async (tx) => {
     const repo = makeUserRepo(tx);
     const base = await repo.createEmptyUser();

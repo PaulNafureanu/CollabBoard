@@ -1,11 +1,10 @@
-import { UpdateUserBody, UserStateType } from "@collabboard/shared";
+import { UserStateType, UserUpdate } from "@collabboard/shared";
 import { AppContext } from "../../context/context";
 import { Bus } from "../../realtime/bus";
-import { makeMembershipRepo } from "../../repositories/membershipRepo";
-import { makeUserRepo } from "../../repositories/userRepo";
-import { prisma } from "./../../db/prisma";
+import { makeMembershipRepo, makeUserRepo } from "../../repositories";
+import { prisma } from "./../../db";
 
-export async function modifyUser(userId: number, body: UpdateUserBody, ctx: AppContext) {
+export async function modifyUser(userId: number, body: UserUpdate, ctx: AppContext) {
   // Update DB
   const repo = makeUserRepo(prisma);
   const user = await repo.updateUser(userId, body);
@@ -21,7 +20,7 @@ export async function modifyUser(userId: number, body: UpdateUserBody, ctx: AppC
     const memberships = await memRepo.getPageByUserId(user.id, 0, count);
     const roomIds = memberships.map((m) => m.roomId);
 
-    const payload: UserStateType = {};
+    const payload: UserStateType = {} as UserStateType; //TODO: emit just the changed data, not the room specific data (role/status)
 
     Bus(ctx).toRooms(roomIds).emit("user_state", payload);
   }

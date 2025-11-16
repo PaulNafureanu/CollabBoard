@@ -1,5 +1,5 @@
-import cors from "cors";
 import "dotenv/config";
+import cors from "cors";
 import express from "express";
 import http from "http";
 import Redis from "ioredis";
@@ -21,7 +21,7 @@ import { messages } from "./routes/messages";
 import { rooms } from "./routes/rooms";
 import { users } from "./routes/users";
 import { version } from "./routes/version";
-import { strToArray } from "./utils/stringUtils";
+import { strToArray } from "./utils/string";
 
 const app = express();
 
