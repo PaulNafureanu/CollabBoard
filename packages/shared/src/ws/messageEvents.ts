@@ -30,3 +30,23 @@ export const MessageCreatedPayloadSchema = z
   .strict();
 
 export type MessageCreatedPayload = z.infer<typeof MessageCreatedPayloadSchema>;
+
+// message:edited
+export const MessageEditedPayloadSchema = z
+  .object({
+    message: MessagePublicSchema,
+  })
+  .strict();
+
+export type MessageEditedPayload = z.infer<typeof MessageEditedPayloadSchema>;
+
+// message:deleted
+export const MessageDeletedPayloadSchema = z
+  .object({
+    roomId: Id,
+    messageId: Id,
+    deletedById: Id,
+  })
+  .strict();
+
+export type MessageDeletedPayload = z.infer<typeof MessageDeletedPayloadSchema>;

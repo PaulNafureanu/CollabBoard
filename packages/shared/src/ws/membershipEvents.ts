@@ -6,6 +6,7 @@ import { MembershipPublicSchema } from "../domain/membership";
 export const MembershipUpdatedPayloadSchema = z
   .object({
     membership: MembershipPublicSchema,
+    updatedById: Id,
   })
   .strict();
 
@@ -17,6 +18,7 @@ export const MembershipRemovedPayloadSchema = z
     roomId: Id,
     userId: Id,
     membershipId: Id,
+    removedById: Id,
   })
   .strict();
 
