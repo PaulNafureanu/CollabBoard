@@ -1,4 +1,11 @@
-import { BoardCreatedPayload, BoardDeletedPayload, BoardUpdatedPayload } from "./boardEvents";
+import type { BoardCreatedPayload, BoardDeletedPayload, BoardUpdatedPayload } from "./boardEvents";
+import type {
+  BoardStatePatchedPayload,
+  BoardStatePatchPayload,
+  BoardStateSavedPayload,
+  BoardStateSavePayload,
+} from "./boardStateEvents";
+import { CursorMovedPayload, CursorMovePayload } from "./cursorEvents";
 import type { MembershipRemovedPayload, MembershipUpdatedPayload } from "./membershipEvents";
 import type {
   MessageCreatedPayload,
@@ -17,6 +24,9 @@ export type ClientToServerEvents = {
   "presence:join": SocketEvent<PresenceChangePayload>;
   "presence:leave": SocketEvent<PresenceChangePayload>;
   "message:typing": SocketEvent<MessageTypingRequest>;
+  "boardstate:patch": SocketEvent<BoardStatePatchPayload>;
+  "boardstate:save": SocketEvent<BoardStateSavePayload>;
+  "cursor:move": SocketEvent<CursorMovePayload>;
 };
 
 export type ServerToClientEvents = {
@@ -34,4 +44,7 @@ export type ServerToClientEvents = {
   "board:created": SocketEvent<BoardCreatedPayload>;
   "board:updated": SocketEvent<BoardUpdatedPayload>;
   "board:deleted": SocketEvent<BoardDeletedPayload>;
+  "boardstate:patched": SocketEvent<BoardStatePatchedPayload>;
+  "boardstate:saved": SocketEvent<BoardStateSavedPayload>;
+  "cursor:moved": SocketEvent<CursorMovedPayload>;
 };

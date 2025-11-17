@@ -18,7 +18,7 @@ export const BoardStatePatchPayloadSchema = z
   })
   .strict();
 
-export type BoardStatePatch = z.infer<typeof BoardStatePatchPayloadSchema>;
+export type BoardStatePatchPayload = z.infer<typeof BoardStatePatchPayloadSchema>;
 
 // boardstate:patched
 
@@ -27,7 +27,7 @@ export const BoardStatePatchedPayloadSchema = BoardStatePatchPayloadSchema.exten
   at: MsEpoch,
 }).strict();
 
-export type BoardStatePatched = z.infer<typeof BoardStatePatchedPayloadSchema>;
+export type BoardStatePatchedPayload = z.infer<typeof BoardStatePatchedPayloadSchema>;
 
 // boardstate:save
 
@@ -41,7 +41,7 @@ export const BoardStateSavePayloadSchema = z
   })
   .strict();
 
-export type BoardStateSave = z.infer<typeof BoardStateSavePayloadSchema>;
+export type BoardStateSavePayload = z.infer<typeof BoardStateSavePayloadSchema>;
 
 // boardstate:saved
 
@@ -55,4 +55,4 @@ export const BoardStateSavedPayloadSchema = z
   })
   .strict();
 
-export type BoardStateSaved = z.infer<typeof BoardStateSavedPayloadSchema>;
+export type BoardStateSavedPayload = z.infer<typeof BoardStateSavedPayloadSchema>;
