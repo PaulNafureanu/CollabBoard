@@ -1,6 +1,6 @@
 import z from "zod";
 import { MessagePublicSchema } from "../domain/message";
-import { Flag, Id } from "../shared/common";
+import { Flag, Id, Text } from "../shared/common";
 
 //message:typing
 export const MessageTypingRequestSchema = z
@@ -46,6 +46,7 @@ export const MessageDeletedPayloadSchema = z
     roomId: Id,
     messageId: Id,
     deletedById: Id,
+    reason: Text.optional(),
   })
   .strict();
 

@@ -1,6 +1,6 @@
 import z from "zod";
 import { BoardPublicSchema } from "../domain/board";
-import { Id, Name } from "../shared/common";
+import { Id, Name, Text } from "../shared/common";
 
 // Copy / Move op via deleted & created events
 
@@ -9,6 +9,7 @@ export const BoardCreatedPayloadSchema = z
   .object({
     board: BoardPublicSchema,
     createdById: Id,
+    reason: Text.optional(),
   })
   .strict();
 
@@ -32,6 +33,7 @@ export const BoardDeletedPayloadSchema = z
     roomId: Id,
     boardId: Id,
     deletedById: Id,
+    reason: Text.optional(),
   })
   .strict();
 

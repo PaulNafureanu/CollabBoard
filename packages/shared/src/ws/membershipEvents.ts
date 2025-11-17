@@ -1,12 +1,13 @@
 import z from "zod";
-import { Id, RoleSchema, StatusSchema } from "../shared/common";
 import { MembershipPublicSchema } from "../domain/membership";
+import { Id, Text } from "../shared/common";
 
 // membership:updated
 export const MembershipUpdatedPayloadSchema = z
   .object({
     membership: MembershipPublicSchema,
     updatedById: Id,
+    reason: Text.optional(),
   })
   .strict();
 
@@ -19,6 +20,7 @@ export const MembershipRemovedPayloadSchema = z
     userId: Id,
     membershipId: Id,
     removedById: Id,
+    reason: Text.optional(),
   })
   .strict();
 
